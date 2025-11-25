@@ -10,12 +10,14 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
+  const { setAuth, setToken } = useAuthStore()
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: async (data) => {
-      setAuth(data.access_token, await authApi.getMe())
+      setToken(data.access_token)
+      const user = await authApi.getMe()
+      setAuth(data.access_token, user)
       navigate('/')
     },
   })
@@ -24,7 +26,9 @@ export default function Login() {
     mutationFn: authApi.register,
     onSuccess: async () => {
       const loginData = await authApi.login({ email, password })
-      setAuth(loginData.access_token, await authApi.getMe())
+      setToken(loginData.access_token)
+      const user = await authApi.getMe()
+      setAuth(loginData.access_token, user)
       navigate('/')
     },
   })
