@@ -11,9 +11,11 @@ interface ShopifySettings {
 }
 
 interface WordPressSettings {
+  wordpress_type: 'wordpress.com' | 'self-hosted'
   wordpress_site_url: string
   wordpress_username: string
   wordpress_app_password: string
+  wordpress_api_token: string
 }
 
 function ImageKeywordSection() {
@@ -287,9 +289,11 @@ export default function Settings() {
     shopify_blog_id: '',
   })
   const [wordpressSettings, setWordpressSettings] = useState<WordPressSettings>({
+    wordpress_type: 'self-hosted',
     wordpress_site_url: '',
     wordpress_username: '',
     wordpress_app_password: '',
+    wordpress_api_token: '',
   })
 
   const { data: settings } = useQuery({
@@ -310,14 +314,18 @@ export default function Settings() {
         shopify_blog_id: blogId,
       })
 
+      const type = (settings.find(s => s.key === 'wordpress_type')?.value || 'self-hosted') as 'wordpress.com' | 'self-hosted'
       const siteUrl = settings.find(s => s.key === 'wordpress_site_url')?.value || ''
       const username = settings.find(s => s.key === 'wordpress_username')?.value || ''
       const appPassword = settings.find(s => s.key === 'wordpress_app_password')?.value || ''
+      const apiToken = settings.find(s => s.key === 'wordpress_api_token')?.value || ''
       
       setWordpressSettings({
+        wordpress_type: type,
         wordpress_site_url: siteUrl,
         wordpress_username: username,
         wordpress_app_password: appPassword,
+        wordpress_api_token: apiToken,
       })
     }
   }, [settings])
@@ -356,18 +364,41 @@ export default function Settings() {
   const handleWordPressSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // 3つの設定を保存
+    // WordPressタイプを保存
     updateMutation.mutate(
-      { key: 'wordpress_site_url', value: wordpressSettings.wordpress_site_url },
+      { key: 'wordpress_type', value: wordpressSettings.wordpress_type },
       {
         onSuccess: () => {
+          // サイトURLを保存
           updateMutation.mutate(
-            { key: 'wordpress_username', value: wordpressSettings.wordpress_username },
+            { key: 'wordpress_site_url', value: wordpressSettings.wordpress_site_url },
             {
               onSuccess: () => {
-                updateMutation.mutate(
-                  { key: 'wordpress_app_password', value: wordpressSettings.wordpress_app_password }
-                )
+                if (wordpressSettings.wordpress_type === 'wordpress.com') {
+                  // WordPress.comの場合: ユーザー名とAPIトークンを保存
+                  updateMutation.mutate(
+                    { key: 'wordpress_username', value: wordpressSettings.wordpress_username },
+                    {
+                      onSuccess: () => {
+                        updateMutation.mutate(
+                          { key: 'wordpress_api_token', value: wordpressSettings.wordpress_api_token }
+                        )
+                      },
+                    }
+                  )
+                } else {
+                  // 自己ホスト型の場合: ユーザー名とアプリケーションパスワードを保存
+                  updateMutation.mutate(
+                    { key: 'wordpress_username', value: wordpressSettings.wordpress_username },
+                    {
+                      onSuccess: () => {
+                        updateMutation.mutate(
+                          { key: 'wordpress_app_password', value: wordpressSettings.wordpress_app_password }
+                        )
+                      },
+                    }
+                  )
+                }
               },
             }
           )
@@ -448,18 +479,28 @@ export default function Settings() {
       {/* WordPress設定セクション */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">WordPress設定</h2>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
-          <p className="text-sm text-yellow-800 font-semibold mb-2">⚠️ 重要: WordPress.comのサイトは使用できません</p>
-          <p className="text-xs text-yellow-700">
-            この機能は自己ホスト型のWordPressサイト（WordPress.org）のみ対応しています。
-            WordPress.comのサイト（例: example.wordpress.com）では使用できません。
-            自己ホスト型のWordPressサイトをお使いください。
-          </p>
-        </div>
         <p className="text-sm text-gray-500 mb-4">
           記事をWordPressに投稿するために、以下の情報を設定してください。
         </p>
         <form onSubmit={handleWordPressSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              WordPressタイプ <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={wordpressSettings.wordpress_type}
+              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_type: e.target.value as 'wordpress.com' | 'self-hosted' })}
+              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            >
+              <option value="self-hosted">自己ホスト型（WordPress.org）</option>
+              <option value="wordpress.com">WordPress.com</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              {wordpressSettings.wordpress_type === 'wordpress.com'
+                ? 'WordPress.comのサイトを使用する場合'
+                : '自分でホストしているWordPressサイトを使用する場合'}
+            </p>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               WordPressサイトURL
@@ -473,45 +514,88 @@ export default function Settings() {
               placeholder="例: https://example.com"
             />
             <p className="mt-1 text-xs text-gray-500">
-              WordPressサイトのURL（https://から始まる完全なURL）<br />
-              <span className="text-red-600">※ WordPress.comのサイト（例: example.wordpress.com）は使用できません</span>
+              {wordpressSettings.wordpress_type === 'wordpress.com'
+                ? 'WordPress.comのサイトURL（例: https://example.wordpress.com）'
+                : 'WordPressサイトのURL（https://から始まる完全なURL）'}
             </p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ユーザー名
-            </label>
-            <input
-              type="text"
-              required
-              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={wordpressSettings.wordpress_username}
-              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_username: e.target.value })}
-              placeholder="WordPressユーザー名"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              API用に作成したWordPressユーザー名
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              アプリケーションパスワード
-            </label>
-            <input
-              type="password"
-              required
-              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={wordpressSettings.wordpress_app_password}
-              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_app_password: e.target.value })}
-              placeholder="アプリケーションパスワード"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              WordPress管理画面 &gt; ユーザー &gt; プロフィール &gt; アプリケーションパスワード から発行<br />
-              <span className="text-blue-600">
-                ※ WordPress 5.6以降は標準機能、それ以前のバージョンは「Application Password」プラグインが必要です
-              </span>
-            </p>
-          </div>
+          {wordpressSettings.wordpress_type === 'wordpress.com' ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ユーザー名 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={wordpressSettings.wordpress_username}
+                  onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_username: e.target.value })}
+                  placeholder="WordPress.comユーザー名"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  WordPress.comのユーザー名（メールアドレス）
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  アプリケーションパスワード <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={wordpressSettings.wordpress_api_token}
+                  onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_api_token: e.target.value })}
+                  placeholder="WordPress.com アプリケーションパスワード"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  WordPress.comのアプリケーションパスワードを取得してください。<br />
+                  <a href="https://wordpress.com/me/security" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    WordPress.com セキュリティ設定
+                  </a> から「アプリケーションパスワード」を発行してください。
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ユーザー名 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={wordpressSettings.wordpress_username}
+                  onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_username: e.target.value })}
+                  placeholder="WordPressユーザー名"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  API用に作成したWordPressユーザー名
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  アプリケーションパスワード <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={wordpressSettings.wordpress_app_password}
+                  onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_app_password: e.target.value })}
+                  placeholder="アプリケーションパスワード"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  WordPress管理画面 &gt; ユーザー &gt; プロフィール &gt; アプリケーションパスワード から発行<br />
+                  <span className="text-blue-600">
+                    ※ WordPress 5.6以降は標準機能、それ以前のバージョンは「Application Password」プラグインが必要です
+                  </span>
+                </p>
+              </div>
+            </>
+          )}
           <button
             type="submit"
             disabled={updateMutation.isPending}
