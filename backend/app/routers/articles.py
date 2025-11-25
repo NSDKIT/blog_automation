@@ -334,13 +334,22 @@ async def publish_article_to_wordpress_endpoint(
     except WordPressError as e:
         # WordPress.com APIエラー
         error_detail = f"WordPress.com API エラー [{e.status_code}]: {e.message}"
-        if e.status_code == 404:
+        if e.status_code == 403:
+            error_detail += (
+                "\n\n認証エラーの可能性があります。以下を確認してください:\n"
+                "1. WordPress.comのユーザー名（メールアドレス）が正しいか確認してください\n"
+                "2. アプリケーションパスワードが正しく発行されているか確認してください\n"
+                "3. アプリケーションパスワードにスペースが含まれている場合は、そのまま入力してください（例: xxxx xxxx xxxx xxxx）\n"
+                "4. WordPress.comのセキュリティ設定（https://wordpress.com/me/security）でアプリケーションパスワードが有効か確認してください\n"
+                "5. サイトURLが正しいか確認してください（例: https://example.wordpress.com）\n"
+                "6. アプリケーションパスワードが取り消されていないか確認してください"
+            )
+        elif e.status_code == 404:
             error_detail += (
                 "\n\n確認事項:\n"
                 "1. WordPress.comサイトURLが正しいか確認してください（例: https://example.wordpress.com）\n"
-                "2. ユーザー名（メールアドレス）が正しいか確認してください。\n"
-                "3. アプリケーションパスワードが正しいか確認してください。\n"
-                "4. WordPress.comのセキュリティ設定でアプリケーションパスワードが発行されているか確認してください。"
+                "2. サイトが存在するか確認してください\n"
+                "3. サイトURLに末尾のスラッシュ（/）が含まれていないか確認してください"
             )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

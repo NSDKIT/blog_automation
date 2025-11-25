@@ -64,6 +64,17 @@ def _check_response(response: httpx.Response, success_code: int) -> Dict:
     
     if response.status_code != success_code:
         error_message = json_object.get('message', response.text[:500]) if isinstance(json_object, dict) else response.text[:500]
+        
+        # 403エラーの場合、より詳細なメッセージを追加
+        if response.status_code == 403:
+            error_message += (
+                "\n\n認証エラーの可能性があります。以下を確認してください:\n"
+                "1. WordPress.comのユーザー名（メールアドレス）が正しいか確認してください\n"
+                "2. アプリケーションパスワードが正しく発行されているか確認してください\n"
+                "3. アプリケーションパスワードにスペースが含まれている場合は、そのまま入力してください\n"
+                "4. WordPress.comのセキュリティ設定（https://wordpress.com/me/security）でアプリケーションパスワードが有効か確認してください"
+            )
+        
         raise WordPressError(
             response.status_code,
             response.reason_phrase or "Unknown",
@@ -122,7 +133,8 @@ async def upload_image_to_wordpress(
     site_domain = config['site_url'].replace("https://", "").replace("http://", "").strip()
     api_url = f"https://public-api.wordpress.com/rest/v1.1/sites/{site_domain}/media/new"
     
-    # WordPress.com APIはBasic認証を使用（ユーザー名:APIトークン）
+    # WordPress.com APIはBasic認証を使用（ユーザー名:アプリケーションパスワード）
+    # アプリケーションパスワードはWordPress.comのセキュリティ設定から発行
     credentials = f"{config['username']}:{config['api_token']}"
     auth_base64_bytes = base64.b64encode(credentials.encode(encoding='utf-8'))
     auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
@@ -143,6 +155,7 @@ async def upload_image_to_wordpress(
                 files=files,
                 headers=headers
             )
+            
             # WordPress.com APIのレスポンス形式を処理
             result = _check_response(response, 200)  # WordPress.comは200を返す
             # WordPress.com APIのレスポンス形式: {"media": [{"ID": 123, ...}]}
@@ -198,7 +211,8 @@ async def publish_article_to_wordpress(
     site_domain = config['site_url'].replace("https://", "").replace("http://", "").strip()
     api_url = f"https://public-api.wordpress.com/rest/v1.1/sites/{site_domain}/posts/new"
     
-    # WordPress.com APIはBasic認証を使用（ユーザー名:APIトークン）
+    # WordPress.com APIはBasic認証を使用（ユーザー名:アプリケーションパスワード）
+    # アプリケーションパスワードはWordPress.comのセキュリティ設定から発行
     credentials = f"{config['username']}:{config['api_token']}"
     auth_base64_bytes = base64.b64encode(credentials.encode(encoding='utf-8'))
     auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
@@ -227,6 +241,7 @@ async def publish_article_to_wordpress(
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(api_url, json=wp_com_data, headers=headers)
+            
             # WordPress.com APIのレスポンス形式を処理
             result = _check_response(response, 200)  # WordPress.comは200を返す
             # WordPress.com APIのレスポンス形式: {"ID": 123, ...}
