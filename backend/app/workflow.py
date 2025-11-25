@@ -7,7 +7,6 @@ import json
 import httpx
 from typing import Dict, List, Optional
 from openai import OpenAI
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 import google.generativeai as genai
 from dotenv import load_dotenv
 from app.supabase_client import get_supabase_client
@@ -25,7 +24,6 @@ class ArticleGenerator:
         """
         # 環境変数からAPIキーを取得（ユーザー設定がない場合のフォールバック）
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         self.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
         self.supabase = get_supabase_client()  # Noneの可能性がある
@@ -39,11 +37,6 @@ class ArticleGenerator:
             user_openai_key = get_setting_by_key(user_id, "openai_api_key")
             if user_openai_key:
                 self.openai_client = OpenAI(api_key=user_openai_key)
-            
-            # Anthropic API Key
-            user_anthropic_key = get_setting_by_key(user_id, "anthropic_api_key")
-            if user_anthropic_key:
-                self.anthropic_client = Anthropic(api_key=user_anthropic_key)
             
             # Gemini API Key
             user_gemini_key = get_setting_by_key(user_id, "gemini_api_key")
@@ -231,23 +224,14 @@ class ArticleGenerator:
         [まとめ]
         """
         
-        if hasattr(self.anthropic_client, "messages"):
-            response = self.anthropic_client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=4000,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            return response.content[0].text
-        else:
-            completion_prompt = f"{HUMAN_PROMPT} {prompt}\n{AI_PROMPT}"
-            response = self.anthropic_client.completions.create(
-                model="claude-2.1",
-                max_tokens_to_sample=4000,
-                prompt=completion_prompt,
-            )
-            return response.completion.strip()
+        response = self.gemini_model.generate_content(
+            prompt,
+            generation_config={
+                "max_output_tokens": 4000,
+                "temperature": 0.8,
+            },
+        )
+        return response.text
     
     def _select_images(self, sheet_id: str) -> List[Dict]:
         """Supabaseから画像を取得"""
