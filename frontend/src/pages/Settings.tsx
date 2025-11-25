@@ -107,7 +107,7 @@ export default function Settings() {
               placeholder="Shopify Admin API Access Token"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Shopify管理画面 > Settings > Apps and sales channels > Develop apps から取得
+              Shopify管理画面 &gt; Settings &gt; Apps and sales channels &gt; Develop apps から取得
             </p>
           </div>
           <div>
@@ -123,7 +123,7 @@ export default function Settings() {
               placeholder="例: 123456789"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Shopify管理画面 > Online Store > Blog posts から確認
+              Shopify管理画面 &gt; Online Store &gt; Blog posts から確認
             </p>
           </div>
           <button
