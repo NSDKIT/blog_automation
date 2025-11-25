@@ -14,6 +14,8 @@ function ImageKeywordSection() {
   const [keyword, setKeyword] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [altText, setAltText] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file')
 
   const { data: images } = useQuery({
     queryKey: ['images'],
@@ -21,12 +23,45 @@ function ImageKeywordSection() {
   })
 
   const createMutation = useMutation({
-    mutationFn: imagesApi.createImage,
+    mutationFn: async (data: { keyword: string; image_url?: string; alt_text?: string; file?: File }) => {
+      if (data.file) {
+        // ファイルアップロード
+        const formData = new FormData()
+        formData.append('keyword', data.keyword)
+        formData.append('file', data.file)
+        if (data.alt_text) {
+          formData.append('alt_text', data.alt_text)
+        }
+        
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/images`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth-storage') ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token : ''}`
+          },
+          body: formData
+        })
+        
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.detail || '画像のアップロードに失敗しました')
+        }
+        
+        return response.json()
+      } else {
+        // URL指定
+        return imagesApi.createImage({
+          keyword: data.keyword,
+          image_url: data.image_url!,
+          alt_text: data.alt_text
+        })
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['images'] })
       setKeyword('')
       setImageUrl('')
       setAltText('')
+      setSelectedFile(null)
       alert('画像を登録しました')
     },
   })
@@ -41,11 +76,40 @@ function ImageKeywordSection() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (uploadMethod === 'file' && !selectedFile) {
+      alert('画像ファイルを選択してください')
+      return
+    }
+    
+    if (uploadMethod === 'url' && !imageUrl) {
+      alert('画像URLを入力してください')
+      return
+    }
+    
     createMutation.mutate({
       keyword,
-      image_url: imageUrl,
+      image_url: uploadMethod === 'url' ? imageUrl : undefined,
       alt_text: altText || undefined,
+      file: uploadMethod === 'file' ? selectedFile || undefined : undefined,
     })
+  }
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // ファイルサイズチェック（10MB以下）
+      if (file.size > 10 * 1024 * 1024) {
+        alert('ファイルサイズは10MB以下にしてください')
+        return
+      }
+      // 画像ファイルかチェック
+      if (!file.type.startsWith('image/')) {
+        alert('画像ファイルを選択してください')
+        return
+      }
+      setSelectedFile(file)
+    }
   }
 
   // キーワードごとにグループ化
@@ -78,16 +142,70 @@ function ImageKeywordSection() {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            画像URL <span className="text-red-500">*</span>
+            アップロード方法
           </label>
-          <input
-            type="url"
-            required
-            className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
+          <div className="flex space-x-4 mb-3">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="uploadMethod"
+                value="file"
+                checked={uploadMethod === 'file'}
+                onChange={(e) => setUploadMethod(e.target.value as 'file' | 'url')}
+                className="mr-2"
+              />
+              ファイルをアップロード
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="uploadMethod"
+                value="url"
+                checked={uploadMethod === 'url'}
+                onChange={(e) => setUploadMethod(e.target.value as 'file' | 'url')}
+                className="mr-2"
+              />
+              URLを指定
+            </label>
+          </div>
+          
+          {uploadMethod === 'file' ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                画像ファイル <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              {selectedFile && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600">選択中: {selectedFile.name}</p>
+                  <img
+                    src={URL.createObjectURL(selectedFile)}
+                    alt="プレビュー"
+                    className="mt-2 max-w-xs h-32 object-cover rounded"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                画像URL <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="url"
+                required={uploadMethod === 'url'}
+                className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

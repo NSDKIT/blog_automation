@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from typing import List, Optional
 from uuid import UUID
+import os
+import uuid
 from app.supabase_db import (
     get_user_images_by_user_id, get_user_images_by_keyword,
     get_user_image_by_id, create_user_image, update_user_image, delete_user_image
 )
 from app.schemas import UserImageCreate, UserImageUpdate, UserImageResponse
 from app.dependencies import get_current_user
+from app.supabase_client import get_supabase_client
 
 router = APIRouter()
 
@@ -29,17 +32,89 @@ async def get_user_images(
 
 @router.post("", response_model=UserImageResponse)
 async def create_user_image_endpoint(
-    image_data: UserImageCreate,
+    image_data: UserImageCreate = None,
+    keyword: str = Form(None),
+    image_url: str = Form(None),
+    alt_text: Optional[str] = Form(None),
+    file: UploadFile = File(None),
     current_user: dict = Depends(get_current_user)
 ):
-    """新規画像を登録"""
+    """新規画像を登録（URLまたはファイルアップロード）"""
     user_id = str(current_user.get("id"))
+    
+    # ファイルアップロードの場合
+    if file:
+        if not keyword:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="キーワードは必須です"
+            )
+        
+        # Supabase Storageにアップロード
+        supabase = get_supabase_client()
+        if not supabase:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Supabaseが設定されていません"
+            )
+        
+        # ファイルを読み込み
+        file_content = await file.read()
+        file_ext = os.path.splitext(file.filename)[1] or ".jpg"
+        file_name = f"{user_id}/{uuid.uuid4()}{file_ext}"
+        
+        # Storageにアップロード（バケット名: user-images）
+        try:
+            storage_response = supabase.storage.from_("user-images").upload(
+                file_name,
+                file_content,
+                file_options={"content-type": file.content_type or "image/jpeg"}
+            )
+            
+            # 公開URLを取得
+            public_url = supabase.storage.from_("user-images").get_public_url(file_name)
+            # get_public_urlは文字列を返す
+            if isinstance(public_url, dict):
+                image_url = public_url.get("publicUrl", str(public_url))
+            else:
+                image_url = str(public_url)
+        except Exception as e:
+            error_msg = str(e)
+            if "Bucket not found" in error_msg or "not found" in error_msg.lower():
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="画像ストレージバケットが設定されていません。Supabaseで'user-images'バケットを作成してください。"
+                )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"画像のアップロードに失敗しました: {error_msg}"
+            )
+    
+    # URL指定の場合
+    elif image_data:
+        keyword = image_data.keyword
+        image_url = image_data.image_url
+        alt_text = image_data.alt_text
+    elif image_url and keyword:
+        # Formデータの場合
+        pass
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="画像URLまたはファイルのいずれかが必要です"
+        )
+    
+    if not keyword or not image_url:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="キーワードと画像URLは必須です"
+        )
     
     image = create_user_image(
         user_id=user_id,
-        keyword=image_data.keyword,
-        image_url=image_data.image_url,
-        alt_text=image_data.alt_text
+        keyword=keyword,
+        image_url=image_url,
+        alt_text=alt_text
     )
     
     return image
@@ -106,7 +181,7 @@ async def delete_user_image_endpoint(
     image_id: UUID,
     current_user: dict = Depends(get_current_user)
 ):
-    """画像を削除"""
+    """画像を削除（Storageからも削除）"""
     user_id = str(current_user.get("id"))
     
     # 既存の画像を確認
@@ -117,7 +192,23 @@ async def delete_user_image_endpoint(
             detail="画像が見つかりません"
         )
     
-    # 画像を削除
+    # Supabase Storageから削除（URLがStorageのパスを含む場合）
+    image_url = existing_image.get("image_url", "")
+    if "storage" in image_url and user_id in image_url:
+        try:
+            supabase = get_supabase_client()
+            if supabase:
+                # URLからファイルパスを抽出
+                # 例: https://xxx.supabase.co/storage/v1/object/public/user-images/user_id/file.jpg
+                path_parts = image_url.split("/user-images/")
+                if len(path_parts) > 1:
+                    file_path = path_parts[1]
+                    supabase.storage.from_("user-images").remove([file_path])
+        except Exception as e:
+            # Storage削除の失敗はログに記録するが、DB削除は続行
+            print(f"Storage削除エラー（無視）: {e}")
+    
+    # データベースから削除
     delete_user_image(str(image_id), user_id)
     
     return {"message": "画像を削除しました"}
