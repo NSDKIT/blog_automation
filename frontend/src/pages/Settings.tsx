@@ -506,7 +506,10 @@ export default function Settings() {
               placeholder="アプリケーションパスワード"
             />
             <p className="mt-1 text-xs text-gray-500">
-              WordPress管理画面 &gt; ユーザー &gt; プロフィール &gt; アプリケーションパスワード から発行
+              WordPress管理画面 &gt; ユーザー &gt; プロフィール &gt; アプリケーションパスワード から発行<br />
+              <span className="text-blue-600">
+                ※ WordPress 5.6以降は標準機能、それ以前のバージョンは「Application Password」プラグインが必要です
+              </span>
             </p>
           </div>
           <button

@@ -1,12 +1,26 @@
 """
 WordPress REST API クライアント
 ユーザーごとのWordPress設定を使用して記事を投稿
+Application PasswordプラグインまたはWordPress 5.6以降の標準機能を使用
 """
 import httpx
 import base64
 import mimetypes
+import json
 from typing import Dict, Optional
 from app.supabase_db import get_setting_by_key
+
+
+class WordPressError(Exception):
+    """WordPressのエラー情報"""
+    def __init__(self, status_code: int, reason: str, message: str):
+        super(WordPressError, self).__init__()
+        self.status_code = status_code
+        self.reason = reason
+        self.message = message
+    
+    def __str__(self):
+        return f"WordPress Error [{self.status_code} {self.reason}]: {self.message}"
 
 
 def get_wordpress_config(user_id: str) -> Optional[Dict[str, str]]:
@@ -25,6 +39,40 @@ def get_wordpress_config(user_id: str) -> Optional[Dict[str, str]]:
     }
 
 
+def _check_response(response: httpx.Response, success_code: int) -> Dict:
+    """
+    WordPressからの応答をチェック
+    
+    Args:
+        response: HTTPレスポンス
+        success_code: 成功時のHTTPステータスコード
+    
+    Returns:
+        JSONレスポンスデータ
+    
+    Raises:
+        WordPressError: エラーが発生した場合
+    """
+    try:
+        json_object = response.json()
+    except (ValueError, json.JSONDecodeError) as ex:
+        raise WordPressError(
+            response.status_code,
+            response.reason_phrase or "Unknown",
+            f"JSON解析エラー: {str(ex)}"
+        )
+    
+    if response.status_code != success_code:
+        error_message = json_object.get('message', response.text[:500]) if isinstance(json_object, dict) else response.text[:500]
+        raise WordPressError(
+            response.status_code,
+            response.reason_phrase or "Unknown",
+            error_message
+        )
+    
+    return json_object
+
+
 async def upload_image_to_wordpress(
     user_id: str,
     image_url: str,
@@ -32,6 +80,7 @@ async def upload_image_to_wordpress(
 ) -> Optional[int]:
     """
     WordPressに画像をアップロード
+    Application PasswordプラグインまたはWordPress 5.6以降の標準機能を使用
     
     Args:
         user_id: ユーザーID
@@ -40,6 +89,10 @@ async def upload_image_to_wordpress(
     
     Returns:
         画像ID（アップロード成功時）、None（失敗時）
+    
+    Raises:
+        ValueError: WordPress設定が未完了の場合
+        WordPressError: WordPress APIエラーの場合
     """
     config = get_wordpress_config(user_id)
     if not config:
@@ -52,24 +105,32 @@ async def upload_image_to_wordpress(
             image_response.raise_for_status()
             image_data = image_response.content
     except Exception as e:
-        raise Exception(f"画像のダウンロードに失敗しました: {str(e)}")
+        raise WordPressError(0, "Download Error", f"画像のダウンロードに失敗しました: {str(e)}")
     
     # MIMEタイプを取得
     mime_type, _ = mimetypes.guess_type(image_filename)
     if not mime_type:
-        mime_type = "image/jpeg"
+        # 拡張子から推測できない場合はデフォルトでJPEG
+        if image_filename.lower().endswith('.png'):
+            mime_type = "image/png"
+        elif image_filename.lower().endswith('.gif'):
+            mime_type = "image/gif"
+        else:
+            mime_type = "image/jpeg"
     
     # WordPress REST API URL
     api_url = f"{config['site_url'].rstrip('/')}/wp-json/wp/v2/media"
     
-    # Basic認証ヘッダー
+    # Basic認証ヘッダー（Application Password方式）
     credentials = f"{config['username']}:{config['app_password']}"
-    encoded_credentials = base64.b64encode(credentials.encode()).decode()
+    auth_base64_bytes = base64.b64encode(credentials.encode(encoding='utf-8'))
+    auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
     
+    # ヘッダー設定（提供されたコードの方式に合わせる）
     headers = {
-        "Authorization": f"Basic {encoded_credentials}",
-        "Content-Disposition": f'attachment; filename="{image_filename}"',
-        "Content-Type": mime_type,
+        'Authorization': 'Basic ' + auth_base64,
+        'Content-Type': mime_type,
+        'Content-Disposition': f'attachment; filename={image_filename}'
     }
     
     try:
@@ -79,33 +140,19 @@ async def upload_image_to_wordpress(
                 content=image_data,
                 headers=headers
             )
-            response.raise_for_status()
             
-            result = response.json()
+            # レスポンスをチェック（201 Createdが成功）
+            result = _check_response(response, 201)
+            
             if result.get("id"):
                 return result["id"]
             return None
-    except httpx.HTTPStatusError as e:
-        error_detail = ""
-        if e.response.status_code == 404:
-            error_detail = (
-                f"WordPress REST APIエンドポイントが見つかりません (404)。\n"
-                f"確認事項:\n"
-                f"1. WordPressサイトURLが正しいか確認してください（例: https://example.com）\n"
-                f"2. WordPress.comのサイトを使用している場合、通常のWordPress REST APIは利用できません。\n"
-                f"   自己ホスト型のWordPressサイト（WordPress.org）を使用してください。\n"
-                f"3. REST APIが有効になっているか確認してください。\n"
-                f"   試しにブラウザで {api_url} にアクセスして確認してください。\n"
-                f"4. アプリケーションパスワードが正しいか確認してください。\n"
-                f"\nエラー詳細: {e.response.text[:500]}"
-            )
-        else:
-            error_detail = f"WordPress API エラー: {e.response.status_code} - {e.response.text[:500]}"
-        raise Exception(error_detail)
+    except WordPressError:
+        raise
     except httpx.RequestError as e:
-        raise Exception(f"WordPress API リクエストエラー: {str(e)}")
+        raise WordPressError(0, "Request Error", f"WordPress API リクエストエラー: {str(e)}")
     except Exception as e:
-        raise Exception(f"WordPress画像アップロードエラー: {str(e)}")
+        raise WordPressError(0, "Unknown Error", f"WordPress画像アップロードエラー: {str(e)}")
 
 
 async def publish_article_to_wordpress(
@@ -115,10 +162,13 @@ async def publish_article_to_wordpress(
     slug: Optional[str] = None,
     featured_media_id: Optional[int] = None,
     status: str = "publish",
-    comment_status: str = "closed"
+    comment_status: str = "closed",
+    category_ids: Optional[list] = None,
+    tag_ids: Optional[list] = None
 ) -> Optional[int]:
     """
     WordPressに記事を投稿
+    Application PasswordプラグインまたはWordPress 5.6以降の標準機能を使用
     
     Args:
         user_id: ユーザーID
@@ -128,9 +178,15 @@ async def publish_article_to_wordpress(
         featured_media_id: サムネイル画像ID（オプション）
         status: 記事ステータス（publish, draft, pending等）
         comment_status: コメントステータス（open, closed）
+        category_ids: カテゴリIDのリスト（オプション）
+        tag_ids: タグIDのリスト（オプション）
     
     Returns:
         WordPress記事ID（投稿成功時）、None（失敗時）
+    
+    Raises:
+        ValueError: WordPress設定が未完了の場合
+        WordPressError: WordPress APIエラーの場合
     """
     config = get_wordpress_config(user_id)
     if not config:
@@ -139,57 +195,51 @@ async def publish_article_to_wordpress(
     # WordPress REST API URL
     api_url = f"{config['site_url'].rstrip('/')}/wp-json/wp/v2/posts"
     
-    # Basic認証ヘッダー
+    # Basic認証ヘッダー（Application Password方式）
     credentials = f"{config['username']}:{config['app_password']}"
-    encoded_credentials = base64.b64encode(credentials.encode()).decode()
+    auth_base64_bytes = base64.b64encode(credentials.encode(encoding='utf-8'))
+    auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
     
     headers = {
-        "Authorization": f"Basic {encoded_credentials}",
-        "Content-Type": "application/json"
+        'Authorization': 'Basic ' + auth_base64,
+        'Content-Type': 'application/json'
     }
     
-    # 記事データを準備
+    # 記事データを準備（提供されたコードの方式に合わせる）
     post_data = {
-        "title": title,
-        "content": content,
-        "status": status,
-        "comment_status": comment_status,
+        'title': title,
+        'content': content,
+        'format': 'standard',
+        'status': status,
+        'comment_status': comment_status,
     }
     
     if slug:
-        post_data["slug"] = slug
+        post_data['slug'] = slug
     
     if featured_media_id:
-        post_data["featured_media"] = featured_media_id
+        post_data['featured_media'] = featured_media_id
+    
+    if category_ids:
+        post_data['categories'] = category_ids
+    
+    if tag_ids:
+        post_data['tags'] = tag_ids
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(api_url, json=post_data, headers=headers)
-            response.raise_for_status()
             
-            result = response.json()
+            # レスポンスをチェック（201 Createdが成功）
+            result = _check_response(response, 201)
+            
             if result.get("id"):
                 return result["id"]
             return None
-    except httpx.HTTPStatusError as e:
-        error_detail = ""
-        if e.response.status_code == 404:
-            error_detail = (
-                f"WordPress REST APIエンドポイントが見つかりません (404)。\n"
-                f"確認事項:\n"
-                f"1. WordPressサイトURLが正しいか確認してください（例: https://example.com）\n"
-                f"2. WordPress.comのサイトを使用している場合、通常のWordPress REST APIは利用できません。\n"
-                f"   自己ホスト型のWordPressサイト（WordPress.org）を使用してください。\n"
-                f"3. REST APIが有効になっているか確認してください。\n"
-                f"   試しにブラウザで {api_url} にアクセスして確認してください。\n"
-                f"4. アプリケーションパスワードが正しいか確認してください。\n"
-                f"\nエラー詳細: {e.response.text[:500]}"
-            )
-        else:
-            error_detail = f"WordPress API エラー: {e.response.status_code} - {e.response.text[:500]}"
-        raise Exception(error_detail)
+    except WordPressError:
+        raise
     except httpx.RequestError as e:
-        raise Exception(f"WordPress API リクエストエラー: {str(e)}")
+        raise WordPressError(0, "Request Error", f"WordPress API リクエストエラー: {str(e)}")
     except Exception as e:
-        raise Exception(f"WordPress投稿エラー: {str(e)}")
+        raise WordPressError(0, "Unknown Error", f"WordPress投稿エラー: {str(e)}")
 

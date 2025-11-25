@@ -236,7 +236,11 @@ async def publish_article_to_wordpress_endpoint(
     current_user: dict = Depends(get_current_user)
 ):
     """WordPressに記事を投稿"""
-    from app.wordpress_client import publish_article_to_wordpress, upload_image_to_wordpress
+    from app.wordpress_client import (
+        publish_article_to_wordpress, 
+        upload_image_to_wordpress,
+        WordPressError
+    )
     import re
     import os
     
@@ -274,7 +278,11 @@ async def publish_article_to_wordpress_endpoint(
                     image_url=first_image_url,
                     image_filename=image_filename
                 )
+            except WordPressError as e:
+                # 画像アップロードエラーは警告として記録するが、記事投稿は続行
+                print(f"画像アップロードエラー（スキップ）: {e}")
             except Exception as e:
+                # その他のエラーも警告として記録
                 print(f"画像アップロードエラー（スキップ）: {str(e)}")
         
         # スラッグを生成（タイトルから）
@@ -322,6 +330,23 @@ async def publish_article_to_wordpress_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except WordPressError as e:
+        # WordPress APIエラー
+        error_detail = f"WordPress API エラー [{e.status_code}]: {e.message}"
+        if e.status_code == 404:
+            error_detail += (
+                "\n\n確認事項:\n"
+                "1. WordPressサイトURLが正しいか確認してください（例: https://example.com）\n"
+                "2. WordPress.comのサイトを使用している場合、通常のWordPress REST APIは利用できません。\n"
+                "   自己ホスト型のWordPressサイト（WordPress.org）を使用してください。\n"
+                "3. REST APIが有効になっているか確認してください。\n"
+                "4. Application Passwordプラグインがインストールされているか、WordPress 5.6以降を使用しているか確認してください。\n"
+                "5. アプリケーションパスワードが正しいか確認してください。"
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_detail
         )
     except Exception as e:
         raise HTTPException(
