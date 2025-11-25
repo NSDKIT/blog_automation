@@ -150,6 +150,15 @@ export default function ArticleDetail() {
           </div>
         </div>
 
+        {article.status === 'failed' && (
+          <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
+            <p className="font-semibold">記事生成に失敗しました</p>
+            <p className="mt-1 text-sm whitespace-pre-wrap break-words">
+              {article.error_message ?? '詳細は管理者にお問い合わせください。'}
+            </p>
+          </div>
+        )}
+
         <div className="prose max-w-none">
           {article.content ? (
             <div

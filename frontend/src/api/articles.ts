@@ -8,6 +8,7 @@ export interface Article {
   title: string | null
   content: string | null
   shopify_article_id: string | null
+  error_message: string | null
   status: string
   created_at: string
   updated_at: string

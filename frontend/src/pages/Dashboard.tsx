@@ -48,10 +48,15 @@ export default function Dashboard() {
                           {article.status}
                         </span>
                       </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500">
+                      <div className="mt-2 flex flex-col text-sm text-gray-500">
                         <p>
                           キーワード: {article.keyword} | ターゲット: {article.target} | 種類: {article.article_type}
                         </p>
+                        {article.status === 'failed' && (
+                          <span className="mt-1 text-red-600">
+                            エラー: {article.error_message ?? '詳細は記事詳細画面をご確認ください。'}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="ml-5 flex-shrink-0">

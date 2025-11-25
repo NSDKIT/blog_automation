@@ -53,6 +53,7 @@ class ArticleResponse(BaseModel):
     article_type: str
     title: Optional[str]
     content: Optional[str]
+    error_message: Optional[str] = None
     shopify_article_id: Optional[str]
     status: str
     created_at: datetime

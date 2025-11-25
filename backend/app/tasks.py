@@ -40,7 +40,8 @@ def generate_article_task(article_id: str, article_data: Dict, user_id: str = No
         updates = {
             "title": result.get("title"),
             "content": result.get("content"),
-            "status": "completed"
+            "status": "completed",
+            "error_message": None
         }
         
         # shopify_jsonがあればJSON文字列として保存
@@ -52,12 +53,17 @@ def generate_article_task(article_id: str, article_data: Dict, user_id: str = No
         
     except Exception as e:
         # エラー処理
+        error_message = str(e)
         try:
             article_response = supabase.table("articles").select("*").eq("id", article_id).limit(1).execute()
             if article_response.data and len(article_response.data) > 0:
                 article = article_response.data[0]
-                update_article(article_id, article.get("user_id"), {"status": "failed"})
+                update_article(
+                    article_id,
+                    article.get("user_id"),
+                    {"status": "failed", "error_message": error_message[:1000]}
+                )
         except:
             pass
-        print(f"記事生成エラー: {e}")
+        print(f"記事生成エラー: {error_message}")
 

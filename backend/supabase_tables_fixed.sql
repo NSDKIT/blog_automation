@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS articles (
     article_type VARCHAR(255) NOT NULL,
     title TEXT,
     content TEXT,
+    error_message TEXT,
     shopify_article_id VARCHAR(255),
     status VARCHAR(50) DEFAULT 'draft' NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
