@@ -1,0 +1,3256 @@
+app:
+  description: ''
+  icon: 👓
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: メガネ記事案ジェネレーター
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: omluc/google_sheets:0.0.2@17f06eaa1d905595e1a76460e7249707a722142353d551cf14aed3d8517c134f
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/google:0.0.9@d360bbc433f39be1b11909cb9c32e6be4a17ea06af083f9e1c7613bb802bf517
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/gemini:0.2.9@2c19480114eab56983bb6afe64b281dbf4adc4f056ca3111d5b621e1ff5d0a86
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/anthropic:0.0.14@d664a277a0148dc3eb2a9cd73611faca82c48bafcbb87347524a22731c76fdc5
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/cohere:0.0.8@1456818eb78f25c1a25e91809cecbd78e5523d39868dcb78607e625913b5e4fe
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/openai:0.2.6@e2665624a156f52160927bceac9e169bd7e5ae6b936ae82575e14c90af390e6e
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: llm
+        targetType: http-request
+      id: 1749215086517-source-1749215109463-target
+      selected: false
+      source: '1749215086517'
+      sourceHandle: source
+      target: '1749215109463'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-true-1749525432395-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: 'true'
+      target: '1749525432395'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-5def9e37-4e28-45b1-ad89-73a303b57a08-17495256036590-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: 5def9e37-4e28-45b1-ad89-73a303b57a08
+      target: '17495256036590'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-00a2df6d-b777-4503-8e89-18794da8936b-17495256048950-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: 00a2df6d-b777-4503-8e89-18794da8936b
+      target: '17495256048950'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-e911b7c7-2136-48fc-a453-557af0993392-17495256051090-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: e911b7c7-2136-48fc-a453-557af0993392
+      target: '17495256051090'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-465c5916-51af-4a90-b28f-d8f542fa5b18-17495256053010-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: 465c5916-51af-4a90-b28f-d8f542fa5b18
+      target: '17495256053010'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-4e79da36-c78b-46a3-a316-aee1d8521a80-17495256054790-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: 4e79da36-c78b-46a3-a316-aee1d8521a80
+      target: '17495256054790'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-d5322f6f-451f-4377-a231-155dcf8a872f-17495256056660-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: d5322f6f-451f-4377-a231-155dcf8a872f
+      target: '17495256056660'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-d03c3d91-5c38-4116-91ea-2d22f1084ffb-17495256046790-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: d03c3d91-5c38-4116-91ea-2d22f1084ffb
+      target: '17495256046790'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 1749525432395-source-1749525692085-target
+      selected: false
+      source: '1749525432395'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17495256036590-source-1749525692085-target
+      selected: false
+      source: '17495256036590'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: variable-aggregator
+        targetType: loop
+      id: 1749525692085-source-1749214969181-target
+      selected: false
+      source: '1749525692085'
+      sourceHandle: source
+      target: '1749214969181'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17495256048950-source-1749525692085-target
+      selected: false
+      source: '17495256048950'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17495256051090-source-1749525692085-target
+      selected: false
+      source: '17495256051090'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17495256053010-source-1749525692085-target
+      selected: false
+      source: '17495256053010'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17495256054790-source-1749525692085-target
+      selected: false
+      source: '17495256054790'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17495256056660-source-1749525692085-target
+      selected: false
+      source: '17495256056660'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17495256046790-source-1749525692085-target
+      selected: false
+      source: '17495256046790'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: template-transform
+      id: 1749525033051-f4acc06c-6a3b-4a53-8dc0-0c736e2fa45b-17513768983060-target
+      selected: false
+      source: '1749525033051'
+      sourceHandle: f4acc06c-6a3b-4a53-8dc0-0c736e2fa45b
+      target: '17513768983060'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: template-transform
+        targetType: variable-aggregator
+      id: 17513768983060-source-1749525692085-target
+      selected: false
+      source: '17513768983060'
+      sourceHandle: source
+      target: '1749525692085'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: loop-start
+        targetType: code
+      id: 1749214969181start-source-1749216697993-target
+      selected: false
+      source: 1749214969181start
+      sourceHandle: source
+      target: '1749216697993'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: tool
+        targetType: code
+      id: 1756853102865-source-1756853127017-target
+      selected: false
+      source: '1756853102865'
+      sourceHandle: source
+      target: '1756853127017'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: code
+        targetType: template-transform
+      id: 1756853127017-source-1756853198649-target
+      selected: false
+      source: '1756853127017'
+      sourceHandle: source
+      target: '1756853198649'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: template-transform
+        targetType: llm
+      id: 1756853198649-source-1756853250935-target
+      selected: false
+      source: '1756853198649'
+      sourceHandle: source
+      target: '1756853250935'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: code
+        targetType: llm
+      id: 1749216697993-source-1749214978345-target
+      selected: false
+      source: '1749216697993'
+      sourceHandle: source
+      target: '1749214978345'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: llm
+        targetType: llm
+      id: 1749214978345-source-1749215047204-target
+      selected: false
+      source: '1749214978345'
+      sourceHandle: source
+      target: '1749215047204'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: llm
+        targetType: tool
+      id: 1749215047204-source-1756853102865-target
+      selected: false
+      source: '1749215047204'
+      sourceHandle: source
+      target: '1756853102865'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        sourceType: llm
+        targetType: llm
+      id: 1756853250935-source-1749215086517-target
+      selected: false
+      source: '1756853250935'
+      sourceHandle: source
+      target: '1749215086517'
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: knowledge-retrieval
+      id: 1749190111828-source-1749194711321-target
+      selected: false
+      source: '1749190111828'
+      sourceHandle: source
+      target: '1749194711321'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757729970308-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757729970308'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757730400720-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757730400720'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757730403936-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757730403936'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757736509070-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757736509070'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757736510903-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757736510903'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757736512868-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757736512868'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757736515318-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757736515318'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757736517366-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757736517366'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757736519802-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757736519802'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755974765722-source-1757736522120-target
+      selected: false
+      source: '1755974765722'
+      sourceHandle: source
+      target: '1757736522120'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757729970308-source-17577365828750-target
+      selected: false
+      source: '1757729970308'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757730400720-source-17577365828750-target
+      selected: false
+      source: '1757730400720'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757730403936-source-17577365828750-target
+      selected: false
+      source: '1757730403936'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757736509070-source-17577365828750-target
+      selected: false
+      source: '1757736509070'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757736510903-source-17577365828750-target
+      selected: false
+      source: '1757736510903'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757736512868-source-17577365828750-target
+      selected: false
+      source: '1757736512868'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757736515318-source-17577365828750-target
+      selected: false
+      source: '1757736515318'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757736517366-source-17577365828750-target
+      selected: false
+      source: '1757736517366'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757736519802-source-17577365828750-target
+      selected: false
+      source: '1757736519802'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1757736522120-source-17577365828750-target
+      selected: false
+      source: '1757736522120'
+      sourceHandle: source
+      target: '17577365828750'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: tool
+      id: 1749190111828-source-1757737402257-target
+      source: '1749190111828'
+      sourceHandle: source
+      target: '1757737402257'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: code
+      id: 1757737402257-source-1755974765722-target
+      source: '1757737402257'
+      sourceHandle: source
+      target: '1755974765722'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: loop
+      id: 17577365828750-source-1749214969181-target
+      source: '17577365828750'
+      sourceHandle: source
+      target: '1749214969181'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: loop
+      id: 1749194711321-source-1749214969181-target
+      source: '1749194711321'
+      sourceHandle: source
+      target: '1749214969181'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: if-else
+      id: 1749190111828-source-1749525033051-target
+      source: '1749190111828'
+      sourceHandle: source
+      target: '1749525033051'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: loop
+        targetType: template-transform
+      id: 1749214969181-source-1757744677146-target
+      source: '1749214969181'
+      sourceHandle: source
+      target: '1757744677146'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: template-transform
+        targetType: end
+      id: 1757744677146-source-1756854684769-target
+      source: '1757744677146'
+      sourceHandle: source
+      target: '1756854684769'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 開始
+        type: start
+        variables:
+        - label: キーワード
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: keyword
+        - label: ターゲット層
+          max_length: 48
+          options:
+          - インドアワーカー
+          - ゲーマー
+          - クリエイター
+          - リモートワーカー
+          - 眼鏡愛用者
+          required: true
+          type: select
+          variable: target
+        - label: 記事の種類
+          max_length: 48
+          options:
+          - ハウツー系:「〜する方法」「〜のコツ」「〜の選び方」
+          - 体験・レビュー系:「実際に使ってみた」「〜してみたら」「使用感レポート」
+          - 比較・解説系:「〜と〜の違い」「徹底比較」「プロが解説」
+          - トレンド・話題系:「今話題の」「最新トレンド」
+          - '問題解決系: 「〜でお悩みの方へ」「〜を解決する」「〜の悩み解消」'
+          - '特徴・メリット系: 「〜がすごい理由」「〜の魅力」「〜のメリット」'
+          - 'ライフスタイル系: 「〜な生活」「〜のある暮らし」「〜でライフスタイル向上」'
+          - 数字・リスト系:「5つのポイント」「10の理由」「3つの秘密」
+          - Eightoon宣伝系
+          required: true
+          type: select
+          variable: article_type
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - image
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          label: 使用シーン1
+          max_length: 5
+          options:
+          - 指定なし
+          - 室内
+          - 仕事
+          - デート
+          - 友達と遊ぶ
+          - クラブ
+          required: false
+          type: select
+          variable: used_type1
+        - label: 使用シーン2
+          max_length: 48
+          options:
+          - 室内
+          - 仕事
+          - デート
+          - 友達と遊ぶ
+          - クラブ
+          required: false
+          type: select
+          variable: used_type2
+        - label: 使用シーン3
+          max_length: 48
+          options:
+          - 室内
+          - 仕事
+          - デート
+          - 友達と遊ぶ
+          - クラブ
+          required: false
+          type: select
+          variable: used_type3
+        - label: システムプロンプト
+          max_length: 256
+          options: []
+          required: false
+          type: text-input
+          variable: prompt
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - image
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          label: 重要視したいキーワード1
+          max_length: 48
+          options:
+          - EIGHTOON
+          - インドアライフ/インドアワーク
+          - ブルーライトカット
+          - 鯖江
+          - βチタニウム
+          - ゲーミング
+          - 職人技術
+          - 快適性
+          required: false
+          type: select
+          variable: important_keyword1
+        - label: 重要視したいキーワード2
+          max_length: 48
+          options:
+          - EIGHTOON
+          - インドアライフ/インドアワーク
+          - ブルーライトカット
+          - 鯖江
+          - βチタニウム
+          - ゲーミング
+          - 職人技術
+          - 快適性
+          required: false
+          type: select
+          variable: important_keyword2
+        - label: 重要視したいキーワード3
+          max_length: 48
+          options:
+          - EIGHTOON
+          - インドアライフ/インドアワーク
+          - ブルーライトカット
+          - 鯖江
+          - βチタニウム
+          - ゲーミング
+          - 職人技術
+          - 快適性
+          required: false
+          type: select
+          variable: important_keyword3
+        - default: 1n908lNr3Pum1BrcSyvxfyCJgiYG-KAhOreJszJHHYJw
+          label: キーワードとURLのID
+          max_length: 100
+          options: []
+          required: true
+          type: text-input
+          variable: sheet_id
+      height: 348
+      id: '1749190111828'
+      position:
+        x: 30
+        y: 362
+      positionAbsolute:
+        x: 30
+        y: 362
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - za9/q0vT+u4ONBW0JtCVmc/6AObjdv5ZA0LS8Ny8YAKa3L7m08aa6ziVO56FhKYm
+        - RwLg5dfMTeLGJbArbZxlsHWo2oFg6q+E80/p9RepesdJT+irJ8YRHsasfKNVaUAj
+        desc: ''
+        metadata_filtering_mode: disabled
+        metadata_model_config:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-english-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: null
+          top_k: 4
+        query_variable_selector:
+        - '1749190111828'
+        - keyword
+        retrieval_mode: multiple
+        selected: false
+        title: 知識検索
+        type: knowledge-retrieval
+      height: 118
+      id: '1749194711321'
+      position:
+        x: 2337
+        y: 362
+      positionAbsolute:
+        x: 2337
+        y: 362
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        break_conditions: []
+        desc: ''
+        error_handle_mode: terminated
+        height: 363
+        logical_operator: and
+        loop_count: 1
+        loop_variables: []
+        selected: false
+        start_node_id: 1749214969181start
+        title: ループ
+        type: loop
+        width: 2940
+      height: 363
+      id: '1749214969181'
+      position:
+        x: 2671
+        y: 1281
+      positionAbsolute:
+        x: 2671
+        y: 1281
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 2940
+      zIndex: 1
+    - data:
+        desc: ''
+        isInLoop: true
+        selected: false
+        title: ''
+        type: loop-start
+      draggable: false
+      height: 48
+      id: 1749214969181start
+      parentId: '1749214969181'
+      position:
+        x: 60
+        y: 113.5
+      positionAbsolute:
+        x: 2731
+        y: 1394.5
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-loop-start
+      width: 44
+      zIndex: 1002
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1749194711321'
+          - result
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        model:
+          completion_params: {}
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: 0097d123-b5d1-4879-918d-20ee69dbae80
+          role: system
+          text: 'あなたは優秀なコンテンツマーケターです。以下の「眼鏡生産者の想い」や「Googleにおける記事の概要」を基に、魅力的で読まれやすい記事のタイトル案を1個生成してください。
+
+
+            # 眼鏡生産者の想い
+
+            {{#context#}}
+
+
+            # Googleにおける記事の概要
+
+            {{#17577365828750.text#}}の「各テキストファイルの概要」
+
+
+            # 生成条件
+
+            - 文字数: 1タイトルあたり15-40文字
+
+            - 多様性: 異なるアプローチ・切り口で多彩なタイトルを作成
+
+            - ターゲット: {{#1749190111828.target#}}
+
+            - タイトルの種類・パターン: {{#1749190111828.article_type#}}
+
+            - 使用シーン: {{#1749190111828.used_type1#}}
+
+
+            # 重要なキーワード
+
+            - {{#1749190111828.important_keyword1#}}
+
+            - {{#1749190111828.important_keyword2#}}
+
+            - {{#1749190111828.important_keyword3#}}
+
+
+            # よく使われるワード
+
+            - {{#17577365828750.text#}}の「見出しによく使われているワード」
+
+
+            # 出力形式
+
+            - 番号付きリストで以下の形式で出力：
+
+            タイトル案（ターゲット、タイトルの種類・パターン）
+
+
+            # 注意事項
+
+            - SEOを意識したキーワード配置
+
+            - 読者の興味を引く魅力的な表現
+
+            - 具体性と親しみやすさのバランス'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: タイトル作成
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 117
+      id: '1749214978345'
+      parentId: '1749214969181'
+      position:
+        x: 508
+        y: 78
+      positionAbsolute:
+        x: 3179
+        y: 1359
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1749194711321'
+          - result
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        model:
+          completion_params: {}
+          mode: chat
+          name: claude-3-5-sonnet-20241022
+          provider: langgenius/anthropic/anthropic
+        prompt_template:
+        - id: b28e3b2a-8b1c-43ce-9b33-6853355d24c2
+          role: system
+          text: あなたは経験豊富なコンテンツライターです。与えられたタイトルに基づいて、重要なキーワードを選定し、上位に表示される記事を分析し、読者にとって価値ある魅力的な記事内容を生成してください。
+        - id: 73672770-6d94-421a-9391-4c00f559cd4f
+          role: user
+          text: '## 入力データ
+
+            ### 生成されたタイトル
+
+            {{#1749214978345.text#}}
+
+
+            # 眼鏡生産者の想い
+
+            {{#context#}}
+
+
+            # Googleにおける記事の概要
+
+            {{#17577365828750.text#}}の「各テキストファイルの概要」
+
+
+            ### 必須単語
+
+            {{#1749190111828.keyword#}}
+
+
+            ## 生成条件
+
+            ### 基本要件
+
+            - 対象: 提供されたタイトルに対して記事内容を生成
+
+            - 最適文字数: {{#17577365828750.text#}}の「最適文字数」
+
+            - 見出しによく使われるワード:{{#17577365828750.text#}}の「見出しによく使われているワード」
+
+            - 構成: 導入→本文→まとめの3部構成
+
+            - トーン: 親しみやすく、専門性もある読みやすい文体
+
+            - ユーザーからの指示: {{#1749190111828.prompt#}}
+
+
+            ### ターゲット読者
+
+            {{#1749190111828.target#}}
+
+
+            ### コンテンツ戦略
+
+            {{#1749525692085.output#}}
+
+
+            ### 重要なキーワード
+
+            - {{#1749190111828.important_keyword1#}}
+
+            - {{#1749190111828.important_keyword2#}}
+
+            - {{#1749190111828.important_keyword3#}}
+
+
+            ## 出力形式
+
+            === 記事 ===
+
+            [タイトル]（ターゲット、タイトルの種類・パターン）
+
+            ### [導入タイトル]
+
+            [導入文]
+
+
+            ### [本文タイトル]
+
+            [本文]
+
+
+            ### [まとめタイトル]
+
+            [まとめ]
+
+
+            ---
+
+
+            ### 品質管理チェックポイント
+
+            - タイトルの意図に沿った内容構成
+
+            - ターゲット読者{{#1749190111828.target#}}に適した語りかけ
+
+            - 宣伝色を抑えた読者目線の情報提供
+
+            - 具体的で actionable な内容
+
+            - SEOキーワードの自然な配置
+
+
+            ## 注意事項
+
+            - 過度な宣伝色は避け、信頼性のある情報発信'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 記事案作成
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 117
+      id: '1749215047204'
+      parentId: '1749214969181'
+      position:
+        x: 808.0709059258943
+        y: 78
+      positionAbsolute:
+        x: 3479.0709059258943
+        y: 1359
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1756853250935'
+          - text
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        model:
+          completion_params:
+            temperature: 0
+          mode: chat
+          name: gemini-2.0-flash
+          provider: langgenius/gemini/google
+        prompt_template:
+        - id: 63110a4e-b2bb-4378-bd23-72124f8a753c
+          role: system
+          text: '以下の記事を正しいShopify JSON形式に変換してください。
+
+
+            ## 記事内容
+
+            {{#context#}}
+
+
+            ## 重要な変換ルール
+
+            1. タイトル抽出: 記事の最初の「#」で始まる見出しを抽出し、titleフィールドに設定します。
+
+            2. HTMLタグ変換:
+
+            # 見出し → <h1>見出し</h1>
+
+            ## 見出し → <h2>見出し</h2>
+
+            ### 見出し → <h3>見出し</h3>
+
+            段落は<p>タグで囲みます。空行は新しい段落として処理します。
+
+            ![alt](URL) → <img src="URL" alt="alt" />
+
+            - item → <ul><li>item</li></ul>
+
+            3. JSON構造: 変換後のHTMLはbody_htmlフィールドに格納します。
+
+            4. meta_text = 記事の要約（150文字以内）
+
+
+            ## 出力仕様
+
+            ・必ず1行のJSON形式で出力してください。
+
+            ・JSON内の文字列はすべてダブルクォートで囲んでください。
+
+            ・出力には改行やタブを含めないでください。
+
+
+            ## 出力形式（サンプル）
+
+            {"article":{"title":"記事タイトル","body_html":"<h2>見出し</h2><p>内容</p><img src=\"https://example.com/image.jpg\"
+            alt=\"説明\" />","metafields_global_description_tag":"meta_text","status":"draft","published":false,"tags":"Column","author":"eightoon"}}
+
+
+            # そのほかの条件
+
+            ・<img>タグの後は、<p>タグも<em>タグも不要
+
+            ・「"tags":"Column"」は固定
+
+            ・「"author":"eightoon"」は固定
+
+
+            変換後のJSONのみを出力してください。'
+        - id: e9377fa2-41d2-4ae4-af03-4c948dc82c74
+          role: user
+          text: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: Shopfy用に整形
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 117
+      id: '1749215086517'
+      parentId: '1749214969181'
+      position:
+        x: 2332
+        y: 78
+      positionAbsolute:
+        x: 5003
+        y: 1359
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-679
+            key: ''
+            type: text
+            value: '{{#1749215086517.text#}}'
+          type: json
+        desc: ''
+        headers: 'X-Shopify-Access-Token:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+          Content-Type:application/json'
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: Shopfyへ投稿
+        type: http-request
+        url: https://eightoon.myshopify.com/admin/api/2024-04/blogs/88138219703/articles.json
+        variables: []
+      height: 153
+      id: '1749215109463'
+      parentId: '1749214969181'
+      position:
+        x: 2636
+        y: 60
+      positionAbsolute:
+        x: 5307
+        y: 1341
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "def main(arg1: str) -> dict:\n    return {'result': arg1}"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        outputs:
+          result:
+            children: null
+            type: string
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: コード実行 2
+        type: code
+        variables:
+        - value_selector:
+          - '1749190111828'
+          - article_type
+          value_type: string
+          variable: arg1
+      height: 81
+      id: '1749216697993'
+      parentId: '1749214969181'
+      position:
+        x: 204
+        y: 96
+      positionAbsolute:
+        x: 2875
+        y: 1377
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: ad6d698f-78da-4b07-8ff0-fc3210d96fe9
+            value: ハウツー
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: 'true'
+          logical_operator: or
+        - case_id: 5def9e37-4e28-45b1-ad89-73a303b57a08
+          conditions:
+          - comparison_operator: contains
+            id: b808af1d-cee5-4663-92b3-5509398ebbda
+            value: 体験・レビュー
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: 5def9e37-4e28-45b1-ad89-73a303b57a08
+          logical_operator: and
+        - case_id: 00a2df6d-b777-4503-8e89-18794da8936b
+          conditions:
+          - comparison_operator: contains
+            id: 7d3f802e-bf0a-403c-adc2-29d0c934863f
+            value: 比較・解説
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: 00a2df6d-b777-4503-8e89-18794da8936b
+          logical_operator: and
+        - case_id: e911b7c7-2136-48fc-a453-557af0993392
+          conditions:
+          - comparison_operator: contains
+            id: d4f6c634-5fb1-4e61-9c6c-7b512a0a3f94
+            value: トレンド・話題
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: e911b7c7-2136-48fc-a453-557af0993392
+          logical_operator: and
+        - case_id: 465c5916-51af-4a90-b28f-d8f542fa5b18
+          conditions:
+          - comparison_operator: contains
+            id: f47b7212-d031-499c-91a9-8fc7fce92798
+            value: 問題解決
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: 465c5916-51af-4a90-b28f-d8f542fa5b18
+          logical_operator: and
+        - case_id: 4e79da36-c78b-46a3-a316-aee1d8521a80
+          conditions:
+          - comparison_operator: contains
+            id: 792bdd57-ea3d-4153-9db8-8745867603f6
+            value: 特徴・メリット
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: 4e79da36-c78b-46a3-a316-aee1d8521a80
+          logical_operator: and
+        - case_id: d5322f6f-451f-4377-a231-155dcf8a872f
+          conditions:
+          - comparison_operator: contains
+            id: 1b9342db-f164-44d7-9902-0fecae418e44
+            value: ライフスタイル
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: d5322f6f-451f-4377-a231-155dcf8a872f
+          logical_operator: and
+        - case_id: d03c3d91-5c38-4116-91ea-2d22f1084ffb
+          conditions:
+          - comparison_operator: contains
+            id: 1e323b70-0f22-470e-b1d2-6fbf0b79eb59
+            value: 数字・リスト
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: d03c3d91-5c38-4116-91ea-2d22f1084ffb
+          logical_operator: and
+        - case_id: f4acc06c-6a3b-4a53-8dc0-0c736e2fa45b
+          conditions:
+          - comparison_operator: contains
+            id: b2898ffb-2ba4-4bc3-b64c-8120753b2c55
+            value: Eightoon宣伝
+            varType: string
+            variable_selector:
+            - '1749190111828'
+            - article_type
+          id: f4acc06c-6a3b-4a53-8dc0-0c736e2fa45b
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: IF/ELSE
+        type: if-else
+      height: 508
+      id: '1749525033051'
+      position:
+        x: 364
+        y: 2439
+      positionAbsolute:
+        x: 364
+        y: 2439
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：メガネ選び・使用に関する課題・ニーズの提示
+
+          - 本文：具体的な選び方・お手入れ方法・フィッティングのステップ
+
+          - まとめ：実践への背中押し
+
+
+          重点ポイント:
+
+          - メガネの正しい選び方・使用方法
+
+          - 実践的なアドバイス・コツ
+
+          - 段階的な説明（例：顔型診断→フレーム選択→レンズ選択など）'
+        title: ハウツー
+        type: template-transform
+        variables: []
+      height: 52
+      id: '1749525432395'
+      position:
+        x: 2003
+        y: 2493
+      positionAbsolute:
+        x: 2003
+        y: 2493
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：メガネ購入前の悩み・期待
+
+          - 本文：実際の使用体験、視力の変化、快適性の向上
+
+          - まとめ：総合評価・推奨ポイント
+
+
+          重点ポイント:
+
+          - リアルな装着感・視界の変化の描写
+
+          - 購入前後の比較
+
+          - 具体的な効果・生活の変化'
+        title: 体験・レビュー
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17495256036590'
+      position:
+        x: 2003
+        y: 2587
+      positionAbsolute:
+        x: 2003
+        y: 2587
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：メガネ関連情報の整理の価値・必要性
+
+          - 本文：項目別の詳細説明（価格帯・人気ランキング・機能比較など）
+
+          - まとめ：全体の振り返り・選択時の活用方法
+
+
+          重点ポイント:
+
+          - 項目の論理的整理（価格順・機能順・人気順など）
+
+          - 具体例・データの提示
+
+          - 実用性の強調（購入判断材料としての活用）'
+        title: 数字・リスト
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17495256046790'
+      position:
+        x: 2003
+        y: 3151
+      positionAbsolute:
+        x: 2003
+        y: 3151
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：メガネ選択時の迷い・読者の疑問
+
+          - 本文：フレーム素材・レンズ種類・ブランド間の詳細比較
+
+          - まとめ：選択指針・推奨事項
+
+
+          重点ポイント:
+
+          - 客観的な比較データ（価格・機能・耐久性など）
+
+          - 専門的な解説（レンズ技術・フレーム構造など）
+
+          - 明確な違いの説明'
+        title: 比較・解説
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17495256048950'
+      position:
+        x: 2003
+        y: 2681
+      positionAbsolute:
+        x: 2003
+        y: 2681
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：メガネファッションのトレンド背景・注目理由
+
+          - 本文：最新トレンドの詳細、スタイリングとの関連性
+
+          - まとめ：将来展望・取り入れ方の提案
+
+
+          重点ポイント:
+
+          - 時代性・ファッション性の強調
+
+          - 市場動向・デザイントレンド
+
+          - 先進性・革新性（新素材・新技術など）'
+        title: トレンド・話題
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17495256051090'
+      position:
+        x: 2003
+        y: 2775
+      positionAbsolute:
+        x: 2003
+        y: 2775
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：メガネに関する悩みへの共感・理解
+
+          - 本文：原因分析、メガネによる視力・生活の問題解決
+
+          - まとめ：改善への期待・行動促進
+
+
+          重点ポイント:
+
+          - 読者の視力や装着感の悩みへの共感
+
+          - 具体的な解決手法（度数調整・フィッティングなど）
+
+          - 改善効果の提示'
+        title: 問題解決系（悩み、解消、解決、対策）
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17495256053010'
+      position:
+        x: 2003
+        y: 2869
+      positionAbsolute:
+        x: 2003
+        y: 2869
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：メガネの機能・メリットの重要性
+
+          - 本文：詳細な機能説明、レンズ・フレーム技術の背景
+
+          - まとめ：価値の再確認・購入検討の推奨
+
+
+          重点ポイント:
+
+          - 技術的優位性の説明（ブルーライトカット・調光レンズなど）
+
+          - 他製品との差別化
+
+          - 具体的なメリット（疲労軽減・UV保護など）'
+        title: 特徴・メリット
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17495256054790'
+      position:
+        x: 2003
+        y: 2963
+      positionAbsolute:
+        x: 2003
+        y: 2963
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：現代生活におけるメガネの役割・重要性紹介
+
+          - 本文：シーン別メガネ活用法・コーディネート提案の詳細
+
+          - まとめ：継続使用のコツ・応用方法
+
+
+          重点ポイント:
+
+          - 共感性の重視（デジタル社会での目の負担など）
+
+          - 実現可能性の担保
+
+          - 具体性・視覚性の強化（コーディネート例など）
+
+          - 継続性・習慣的使用の視点'
+        title: ライフスタイル
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17495256056660'
+      position:
+        x: 2003
+        y: 3057
+      positionAbsolute:
+        x: 2003
+        y: 3057
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        output_type: string
+        selected: false
+        title: 構成・重点ポイント
+        type: variable-aggregator
+        variables:
+        - - '1749525432395'
+          - output
+        - - '17495256036590'
+          - output
+        - - '17495256048950'
+          - output
+        - - '17495256051090'
+          - output
+        - - '17495256053010'
+          - output
+        - - '17495256054790'
+          - output
+        - - '17495256056660'
+          - output
+        - - '17495256046790'
+          - output
+      height: 291
+      id: '1749525692085'
+      position:
+        x: 2337
+        y: 2728.5
+      positionAbsolute:
+        x: 2337
+        y: 2728.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '構成:
+
+          - 導入：読者の現在の悩み・課題の共感的提示
+
+          - 本文：EIGHTOONの特徴・優位性の詳細説明、他社との差別化ポイント
+
+          - まとめ：行動喚起・購入への誘導
+
+
+          重点ポイント:
+
+          - EIGHTOONブランドの独自性・信頼性の強調
+
+          - 具体的な効果・メリットの提示（データ・事例を含む）
+
+          - 読者の購買意欲を高める訴求（限定性・緊急性・特典など）
+
+          - 明確なCTA（Call to Action）の設置
+
+          - 感情に訴える表現と論理的根拠のバランス
+
+          - ターゲット層に響く言葉選び・トーン設定
+
+          - 製品の実用性・価値の具体的な説明
+
+          - 購入後の満足感・変化の予感を演出
+
+
+          宣伝系特有の注意点:
+
+          - 過度な誇張表現は避け、信頼性を重視
+
+          - 読者にとってのメリットを中心に構成
+
+          - 競合他社への配慮を保ちつつ差別化を図る
+
+          - 購入への自然な流れを作る（押し売り感を避ける）'
+        title: Eightoon宣伝系
+        type: template-transform
+        variables: []
+      height: 52
+      id: '17513768983060'
+      position:
+        x: 2003
+        y: 3245
+      positionAbsolute:
+        x: 2003
+        y: 3245
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\n\ndef main(data_list):\n    \"\"\"\n    検索結果のリストからリンクを抽出し、指定された辞書形式で返します。\n\
+          \    link1からlink10までの変数を定義し、対応するリンクがない場合は空文字列となります。\n    \"\"\"\n    \n\
+          \    # 1. 10個の空文字列を持つリストを準備します\n    link_values = [\"\"] * 10\n\n    try:\n\
+          \        # data_listに必要なデータが含まれているかチェック\n        if data_list and isinstance(data_list,\
+          \ list) and len(data_list) > 0 and 'organic_results' in data_list[0]:\n\
+          \            \n            results_list = data_list[0][\"organic_results\"\
+          ]\n            \n            # 2. results_listから取得できたリンクを、link_valuesリストに最大10件まで上書きします\n\
+          \            for i in range(min(len(results_list), 10)): # min関数でリストの長さと10の小さい方を取得\n\
+          \                if \"link\" in results_list[i]:\n                    link_values[i]\
+          \ = results_list[i][\"link\"]\n\n    except (IndexError, TypeError, KeyError)\
+          \ as e:\n        print(f\"データ処理中にエラーが発生しました: {e}\")\n\n    # 3. リストの各要素を、link1からlink10までの変数に展開します\n\
+          \    link1, link2, link3, link4, link5, link6, link7, link8, link9, link10\
+          \ = link_values\n    \n    # 4. 指定された形式で辞書を返します\n    return {\n        \"\
+          link1\": link1, \n        \"link2\": link2, \n        \"link3\": link3,\
+          \ \n        \"link4\": link4, \n        \"link5\": link5, \n        \"link6\"\
+          : link6, \n        \"link7\": link7, \n        \"link8\": link8, \n    \
+          \    \"link9\": link9, \n        \"link10\": link10\n    }"
+        code_language: python3
+        desc: ''
+        outputs:
+          link1:
+            children: null
+            type: string
+          link10:
+            children: null
+            type: string
+          link2:
+            children: null
+            type: string
+          link3:
+            children: null
+            type: string
+          link4:
+            children: null
+            type: string
+          link5:
+            children: null
+            type: string
+          link6:
+            children: null
+            type: string
+          link7:
+            children: null
+            type: string
+          link8:
+            children: null
+            type: string
+          link9:
+            children: null
+            type: string
+        selected: false
+        title: Googleからのデータ整形
+        type: code
+        variables:
+        - value_selector:
+          - '1757737402257'
+          - json
+          value_type: array[object]
+          variable: data_list
+      height: 52
+      id: '1755974765722'
+      position:
+        x: 1669
+        y: 473
+      positionAbsolute:
+        x: 1669
+        y: 473
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        is_team_authorization: true
+        loop_id: '1749214969181'
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: The ID of the Google Sheet (found in the URL)
+            ja_JP: The ID of the Google Sheet (found in the URL)
+            pt_BR: O ID da planilha Google (encontrado na URL)
+            zh_Hans: Google 表格的 ID（在 URL 中）
+          label:
+            en_US: Spreadsheet ID
+            ja_JP: Spreadsheet ID
+            pt_BR: ID da Planilha
+            zh_Hans: 表格 ID
+          llm_description: The ID of the Google Sheet, which can be found in the sheet's
+            URL
+          max: null
+          min: null
+          name: spreadsheet_id
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: List of ranges to retrieve (e.g. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+            ja_JP: List of ranges to retrieve (e.g. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+            pt_BR: Lista de intervalos para recuperar (ex. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+            zh_Hans: 要检索的范围列表（例如 ["Sheet1!A1:C3", "Sheet2!B2:D4"]）
+          label:
+            en_US: Ranges
+            ja_JP: Ranges
+            pt_BR: Intervalos
+            zh_Hans: 范围列表
+          llm_description: An array of range strings to retrieve in A1 notation or
+            R1C1 notation (e.g. ["Sheet1!A1:C3", "Sheet2!B2:D4"])
+          max: null
+          min: null
+          name: ranges
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: SERIAL_NUMBER
+          form: form
+          human_description:
+            en_US: How dates, times, and durations should be represented in the output
+            ja_JP: How dates, times, and durations should be represented in the output
+            pt_BR: Como datas, horários e durações devem ser representados na saída
+            zh_Hans: 日期、时间和持续时间在输出中的表示方式
+          label:
+            en_US: Date Time Render Option
+            ja_JP: Date Time Render Option
+            pt_BR: Opção de Renderização de Data e Hora
+            zh_Hans: 日期时间渲染选项
+          llm_description: How dates, times, and durations should be represented in
+            the output
+          max: null
+          min: null
+          name: date_time_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: SERIAL_NUMBER
+              ja_JP: SERIAL_NUMBER
+              pt_BR: NÚMERO DE SÉRIE
+              zh_Hans: 序列号
+            value: SERIAL_NUMBER
+          - icon: ''
+            label:
+              en_US: FORMATTED_STRING
+              ja_JP: FORMATTED_STRING
+              pt_BR: STRING FORMATADA
+              zh_Hans: 格式化字符串
+            value: FORMATTED_STRING
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: The major dimension that results should use
+            ja_JP: The major dimension that results should use
+            pt_BR: A dimensão principal que os resultados devem usar
+            zh_Hans: 结果应使用的主要维度
+          label:
+            en_US: Major Dimension
+            ja_JP: Major Dimension
+            pt_BR: Dimensão Principal
+            zh_Hans: 主要维度
+          llm_description: The major dimension that results should use (ROWS or COLUMNS)
+          max: null
+          min: null
+          name: major_dimension
+          options:
+          - icon: ''
+            label:
+              en_US: ROWS
+              ja_JP: ROWS
+              pt_BR: LINHAS
+              zh_Hans: 行
+            value: ROWS
+          - icon: ''
+            label:
+              en_US: COLUMNS
+              ja_JP: COLUMNS
+              pt_BR: COLUNAS
+              zh_Hans: 列
+            value: COLUMNS
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: null
+          form: form
+          human_description:
+            en_US: How values should be represented in the output
+            ja_JP: How values should be represented in the output
+            pt_BR: Como os valores devem ser representados na saída
+            zh_Hans: 值在输出中的表示方式
+          label:
+            en_US: Value Render Option
+            ja_JP: Value Render Option
+            pt_BR: Opção de Renderização de Valor
+            zh_Hans: 值渲染选项
+          llm_description: How values should be represented in the output
+          max: null
+          min: null
+          name: value_render_option
+          options:
+          - icon: ''
+            label:
+              en_US: FORMATTED_VALUE
+              ja_JP: FORMATTED_VALUE
+              pt_BR: VALOR FORMATADO
+              zh_Hans: 格式化值
+            value: FORMATTED_VALUE
+          - icon: ''
+            label:
+              en_US: FORMULA
+              ja_JP: FORMULA
+              pt_BR: FÓRMULA
+              zh_Hans: 公式
+            value: FORMULA
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          date_time_render_option: ''
+          major_dimension: ''
+          ranges: ''
+          spreadsheet_id: ''
+          value_render_option: ''
+        provider_id: omluc/google_sheets/google_sheets
+        provider_name: omluc/google_sheets/google_sheets
+        provider_type: builtin
+        selected: false
+        title: URLとKeyword
+        tool_configurations:
+          date_time_render_option:
+            type: constant
+            value: SERIAL_NUMBER
+          major_dimension:
+            type: constant
+            value: null
+          value_render_option:
+            type: constant
+            value: null
+        tool_description: Retrieve data from multiple ranges in a Google Sheet
+        tool_label: Batch Get
+        tool_name: batch_get
+        tool_node_version: '2'
+        tool_parameters:
+          ranges:
+            type: mixed
+            value: '["Sheet1!A1:B178"]'
+          spreadsheet_id:
+            type: mixed
+            value: '{{#1749190111828.sheet_id#}}'
+        type: tool
+      height: 140
+      id: '1756853102865'
+      parentId: '1749214969181'
+      position:
+        x: 1116
+        y: 66.5
+      positionAbsolute:
+        x: 3787
+        y: 1347.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "def main(jsonData: str) -> dict:\n    raw_values = jsonData[0][\"valueRanges\"\
+          ][0][\"values\"]\n    headers = raw_values[0]\n    data_rows = raw_values[1:]\n\
+          \    \n    values = []\n    for row in data_rows:\n        row_obj = {}\n\
+          \        for i, header in enumerate(headers):\n            row_obj[header]\
+          \ = row[i] if i < len(row) else \"\"\n        values.append(row_obj)\n \
+          \   \n    return {\n        \"values\": values\n    }"
+        code_language: python3
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        outputs:
+          values:
+            children: null
+            type: array[object]
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: リスト化
+        type: code
+        variables:
+        - value_selector:
+          - '1756853102865'
+          - json
+          value_type: array[object]
+          variable: jsonData
+      height: 81
+      id: '1756853127017'
+      parentId: '1749214969181'
+      position:
+        x: 1420
+        y: 96
+      positionAbsolute:
+        x: 4091
+        y: 1377
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        selected: false
+        template: '{{ arg1 }}'
+        title: 変換
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1756853127017'
+          - values
+          value_type: array[object]
+          variable: arg1
+      height: 52
+      id: '1756853198649'
+      parentId: '1749214969181'
+      position:
+        x: 1724
+        y: 110.5
+      positionAbsolute:
+        x: 4395
+        y: 1391.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1756853198649'
+          - output
+        desc: ''
+        isInIteration: false
+        isInLoop: true
+        loop_id: '1749214969181'
+        model:
+          completion_params: {}
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: 2dd4f82b-d738-44c5-a767-6d0a8332a34d
+          role: system
+          text: 'あなたは記事制作と画像選定の専門家です。提供された記事内容と画像データベース（{{#1756853198649.output#}}）から、最適な画像を複数選定し、記事に組み込んだ完成版を出力します。
+
+
+            【処理手順】
+
+            1. 記事構造を分析し、画像が必要な箇所を特定
+
+            2. キーワードマッチングで最適画像を選定
+
+            3. 画像を適切な位置に配置した完全な記事を作成
+
+            4. alt属性とキャプションも自動生成
+
+
+            【出力形式】
+
+            - Markdown または HTML
+
+            - 画像は ![alt](URL) または <img> で埋め込み
+
+            - 各画像にalt属性とキャプション
+
+            - SEO最適化された構造'
+        - id: 8166cb8d-636e-4ca7-baa1-92d474cf464b
+          role: user
+          text: '【記事作成＋画像選定タスク】
+
+
+            ■ 基本情報
+
+            - 記事タイトル：「{{#1749214978345.text#}}」
+
+            - 記事内容：「{{#1749215047204.text#}}」
+
+            - タイトルの種類・パターン: {{#1749190111828.article_type#}}
+
+            - ターゲット読者：{{#1749190111828.target#}}
+
+            - 出力形式：[Markdown/HTML]
+
+
+            ■ 画像データベース
+
+            {{#context#}}
+
+
+            ■ 実行内容
+
+            記事を分析し、最適な画像を選定して組み込んだ完成版記事を出力してください。
+
+            画像は記事の流れに沿って適切な位置に配置し、alt属性も含めてください。'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 記事への画像の挿入
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 117
+      id: '1756853250935'
+      parentId: '1749214969181'
+      position:
+        x: 2028
+        y: 78
+      positionAbsolute:
+        x: 4699
+        y: 1359
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1757744677146'
+          - output
+          value_type: string
+          variable: output
+        selected: false
+        title: 終了 2
+        type: end
+      height: 88
+      id: '1756854684769'
+      position:
+        x: 6001
+        y: 1281
+      positionAbsolute:
+        x: 6001
+        y: 1281
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url1
+        type: http-request
+        url: '{{#1755974765722.link1#}}'
+        variables: []
+      height: 160
+      id: '1757729970308'
+      position:
+        x: 2003
+        y: 473
+      positionAbsolute:
+        x: 2003
+        y: 473
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url2
+        type: http-request
+        url: '{{#1755974765722.link2#}}'
+        variables: []
+      height: 160
+      id: '1757730400720'
+      position:
+        x: 2003
+        y: 675
+      positionAbsolute:
+        x: 2003
+        y: 675
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url3
+        type: http-request
+        url: '{{#1755974765722.link3#}}'
+        variables: []
+      height: 160
+      id: '1757730403936'
+      position:
+        x: 2003
+        y: 877
+      positionAbsolute:
+        x: 2003
+        y: 877
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url4
+        type: http-request
+        url: '{{#1755974765722.link4#}}'
+        variables: []
+      height: 160
+      id: '1757736509070'
+      position:
+        x: 2003
+        y: 1079
+      positionAbsolute:
+        x: 2003
+        y: 1079
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url5
+        type: http-request
+        url: '{{#1755974765722.link5#}}'
+        variables: []
+      height: 160
+      id: '1757736510903'
+      position:
+        x: 2003
+        y: 1281
+      positionAbsolute:
+        x: 2003
+        y: 1281
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url6
+        type: http-request
+        url: '{{#1755974765722.link6#}}'
+        variables: []
+      height: 160
+      id: '1757736512868'
+      position:
+        x: 2003
+        y: 1483
+      positionAbsolute:
+        x: 2003
+        y: 1483
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url7
+        type: http-request
+        url: '{{#1755974765722.link7#}}'
+        variables: []
+      height: 160
+      id: '1757736515318'
+      position:
+        x: 2003
+        y: 1685
+      positionAbsolute:
+        x: 2003
+        y: 1685
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url8
+        type: http-request
+        url: '{{#1755974765722.link8#}}'
+        variables: []
+      height: 160
+      id: '1757736517366'
+      position:
+        x: 2003
+        y: 1887
+      positionAbsolute:
+        x: 2003
+        y: 1887
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url9
+        type: http-request
+        url: '{{#1755974765722.link9#}}'
+        variables: []
+      height: 160
+      id: '1757736519802'
+      position:
+        x: 2003
+        y: 2089
+      positionAbsolute:
+        x: 2003
+        y: 2089
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        default_value:
+        - key: body
+          type: string
+          value: ''
+        - key: status_code
+          type: number
+          value: 0
+        - key: headers
+          type: object
+          value: '{}'
+        desc: ''
+        error_strategy: default-value
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 10
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 10
+          write: 10
+        title: url10
+        type: http-request
+        url: '{{#1755974765722.link10#}}'
+        variables: []
+      height: 160
+      id: '1757736522120'
+      position:
+        x: 2003
+        y: 2291
+      positionAbsolute:
+        x: 2003
+        y: 2291
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params: {}
+          mode: chat
+          name: gemini-2.0-flash
+          provider: langgenius/gemini/google
+        prompt_template:
+        - id: 36189bef-5b3c-4873-8665-ba95658e16ec
+          role: system
+          text: '# あなたの役割
+
+            あなたは、与えられた複数のテキストデータを分析し、以下の3つの項目を抽出・要約するテキスト分析アシスタントです。
+
+
+            # 実行プロセス
+
+            1. **最適文字数の算出**: 入力された全テキストの本文の文字数をそれぞれカウントし、その平均値を算出してください。
+
+            2. **頻出ワードの抽出**: 全テキストの`<h1>`から`<h4>`の見出しタグに含まれる内容を分析し、頻繁に使用されるキーワードを複数特定してください。
+
+            3. **概要の作成**: 各テキストファイルの内容を個別に要約し、それぞれ詳細にまとめてください。
+
+
+            # 出力形式
+
+            必ず以下の形式で出力してください。
+
+            ・最適文字数：〇〇文字
+
+            ・見出しによく使われているワード：〇〇、〇〇、〇〇
+
+            ・各テキストファイルの概要：〇〇〜〜〜。〇〇〜〜〜〜。〇〇〜〜〜〜。'
+        - id: c37f68a4-ff1c-4a16-a965-e3a57863ac30
+          role: user
+          text: 'システムプロンプトで定義された役割と形式に従って、以下の10個のテキストファイルを分析し、結果をまとめてください。
+
+
+            # 分析対象テキスト
+
+            text1={{#1757729970308.body#}}
+
+            text2={{#1757730400720.body#}}
+
+            text3={{#1757730403936.body#}}
+
+            text4={{#1757736509070.body#}}
+
+            text5={{#1757736510903.body#}}
+
+            text6={{#1757736512868.body#}}
+
+            text7={{#1757736515318.body#}}
+
+            text8={{#1757736517366.body#}}
+
+            text9={{#1757736519802.body#}}
+
+            text10={{#1757736522120.body#}}
+
+
+            # 出力形式
+
+            ・最適文字数：〇〇文字
+
+            ・見出しによく使われているワード：〇〇、〇〇、〇〇'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: googleまとめ_moji (1)
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 117
+      id: '17577365828750'
+      position:
+        x: 2337
+        y: 1296
+      positionAbsolute:
+        x: 2337
+        y: 1296
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: used for searching
+            ja_JP: used for searching
+            pt_BR: used for searching
+            zh_Hans: 用于搜索网页内容
+          label:
+            en_US: Query string
+            ja_JP: Query string
+            pt_BR: Query string
+            zh_Hans: 查询语句
+          llm_description: key words for searching
+          max: null
+          min: null
+          name: query
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Parameter defines the language to use for the Google search. It's
+              a two-letter language code. (e.g., en for English, es for Spanish, or
+              fr for French). Head to https://serpapi.com/google-languages for a full
+              list of supported Google languages.
+            ja_JP: Parameter defines the language to use for the Google search. It's
+              a two-letter language code. (e.g., en for English, es for Spanish, or
+              fr for French). Head to https://serpapi.com/google-languages for a full
+              list of supported Google languages.
+            pt_BR: Parameter defines the language to use for the Google search. It's
+              a two-letter language code. (e.g., en for English, es for Spanish, or
+              fr for French). Head to https://serpapi.com/google-languages for a full
+              list of supported Google languages.
+            zh_Hans: 此参数定义用于 Google 搜索的语言。它是一个两字母的语言代码。 (例如，en 代表英语，es 代表西班牙语，fr 代表法语)。请前往
+              https://serpapi.com/google-languages 查看完整的支持 Google 语言列表。
+          label:
+            en_US: Language
+            ja_JP: Language
+            pt_BR: Language
+            zh_Hans: 语言
+          llm_description: Language
+          max: null
+          min: null
+          name: hl
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Parameter defines the country to use for the Google search. It's
+              a two-letter country code. (e.g., us for the United States, uk for United
+              Kingdom, or fr for France). Head to the https://serpapi.com/google-countries
+              for a full list of supported Google countries.
+            ja_JP: Parameter defines the country to use for the Google search. It's
+              a two-letter country code. (e.g., us for the United States, uk for United
+              Kingdom, or fr for France). Head to the https://serpapi.com/google-countries
+              for a full list of supported Google countries.
+            pt_BR: Parameter defines the country to use for the Google search. It's
+              a two-letter country code. (e.g., us for the United States, uk for United
+              Kingdom, or fr for France). Head to the https://serpapi.com/google-countries
+              for a full list of supported Google countries.
+            zh_Hans: 此参数定义用于 Google 搜索的国家。它是一个两字母的国家代码。 (例如，us 代表美国，uk 代表英国，fr 代表法国)。请前往
+              https://serpapi.com/google-countries 查看完整的支持 Google 国家列表。
+          label:
+            en_US: Country
+            ja_JP: Country
+            pt_BR: Country
+            zh_Hans: 国家
+          llm_description: Country
+          max: null
+          min: null
+          name: gl
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Parameter defines from where you want the search to originate.
+              If several locations match the location requested, we'll pick the most
+              popular one. Head to the /locations.json API if you need more precise
+              control. The location and uule parameters can't be used together. It
+              is recommended to specify location at the city level in order to simulate
+              a real user’s search. If location is omitted, the search may take on
+              the location of the proxy.
+            ja_JP: Parameter defines from where you want the search to originate.
+              If several locations match the location requested, we'll pick the most
+              popular one. Head to the /locations.json API if you need more precise
+              control. The location and uule parameters can't be used together. It
+              is recommended to specify location at the city level in order to simulate
+              a real user’s search. If location is omitted, the search may take on
+              the location of the proxy.
+            pt_BR: Parameter defines from where you want the search to originate.
+              If several locations match the location requested, we'll pick the most
+              popular one. Head to the /locations.json API if you need more precise
+              control. The location and uule parameters can't be used together. It
+              is recommended to specify location at the city level in order to simulate
+              a real user’s search. If location is omitted, the search may take on
+              the location of the proxy.
+            zh_Hans: 此参数定义搜索的位置。如果有多个位置与请求的位置匹配，我们将选择最受欢迎的一个。如果需要更精确的控制，请前往 /locations.json
+              API。location 和 uule 参数不能同时使用。建议在城市级别指定位置，以模拟真实用户的搜索。如果省略位置，则搜索可能会采用代理的位置。
+          label:
+            en_US: Location
+            ja_JP: Location
+            pt_BR: Location
+            zh_Hans: 位置
+          llm_description: Location
+          max: null
+          min: null
+          name: location
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        params:
+          gl: ''
+          hl: ''
+          location: ''
+          query: ''
+        provider_id: langgenius/google/google
+        provider_name: langgenius/google/google
+        provider_type: builtin
+        selected: false
+        title: GoogleSearch
+        tool_configurations: {}
+        tool_description: A tool for performing a Google SERP search and extracting
+          snippets and webpages.Input should be a search query.
+        tool_label: GoogleSearch
+        tool_name: google_search
+        tool_node_version: '2'
+        tool_parameters:
+          gl:
+            type: mixed
+            value: null
+          hl:
+            type: mixed
+            value: null
+          location:
+            type: mixed
+            value: null
+          query:
+            type: mixed
+            value: '{{#1749190111828.keyword#}}'
+        type: tool
+      height: 52
+      id: '1757737402257'
+      position:
+        x: 1331
+        y: 473
+      positionAbsolute:
+        x: 1331
+        y: 473
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        selected: false
+        template: '{{ "記事を生成しました。確認してください。" }}'
+        title: テンプレート 11
+        type: template-transform
+        variables: []
+      height: 52
+      id: '1757744677146'
+      position:
+        x: 5701
+        y: 1281
+      positionAbsolute:
+        x: 5701
+        y: 1281
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: -537.2591785888108
+      y: -62.50165912867999
+      zoom: 0.5142141044547948
+  rag_pipeline_variables: []
