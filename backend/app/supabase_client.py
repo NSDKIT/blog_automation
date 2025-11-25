@@ -9,13 +9,18 @@ load_dotenv()
 
 
 def get_supabase_client() -> Client | None:
-    """Supabaseクライアントを取得（設定されていない場合はNoneを返す）"""
+    """Supabaseクライアントを取得。サービスロールキー優先。"""
     supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_ANON_KEY")
-    
-    if not supabase_url or not supabase_key:
-        # Supabaseが設定されていない場合はNoneを返す（後で設定可能）
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    anon_key = os.getenv("SUPABASE_ANON_KEY")
+
+    if not supabase_url:
         return None
-    
+
+    # サーバー側では RLS を回避するため service role key を優先的に利用
+    supabase_key = service_key or anon_key
+    if not supabase_key:
+        return None
+
     return create_client(supabase_url, supabase_key)
 
