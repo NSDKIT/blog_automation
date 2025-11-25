@@ -64,7 +64,8 @@ async def create_article_endpoint(
     background_tasks.add_task(
         generate_article_task,
         article_id=article.get("id"),
-        article_data=article_data.dict()
+        article_data=article_data.dict(),
+        user_id=str(current_user.get("id"))
     )
     
     return article
@@ -152,6 +153,9 @@ async def publish_article_endpoint(
     article_id: UUID,
     current_user: dict = Depends(get_current_user)
 ):
+    from app.shopify_client import publish_article_to_shopify
+    import json
+    
     article = get_article_by_id(str(article_id), str(current_user.get("id")))
     
     if not article:
@@ -166,12 +170,62 @@ async def publish_article_endpoint(
             detail="記事内容が生成されていません"
         )
     
-    # Shopifyへの投稿処理（実装が必要）
-    # shopify_article_id = await publish_to_shopify(article)
-    # update_article(str(article_id), str(current_user.get("id")), {
-    #     "shopify_article_id": shopify_article_id,
-    #     "status": "published"
-    # })
+    user_id = str(current_user.get("id"))
+    title = article.get("title", "タイトルなし")
+    content = article.get("content", "")
     
-    return {"message": "記事をShopifyに投稿しました"}
+    # shopify_jsonがあれば使用
+    shopify_json = None
+    if article.get("shopify_json"):
+        try:
+            if isinstance(article.get("shopify_json"), str):
+                shopify_json = json.loads(article.get("shopify_json"))
+            else:
+                shopify_json = article.get("shopify_json")
+        except:
+            pass
+    
+    try:
+        # Shopifyに投稿
+        shopify_article_id = await publish_article_to_shopify(
+            user_id=user_id,
+            title=title,
+            content=content,
+            shopify_json=shopify_json
+        )
+        
+        if shopify_article_id:
+            # 記事を更新
+            update_article(str(article_id), user_id, {
+                "shopify_article_id": shopify_article_id,
+                "status": "published"
+            })
+            
+            # 履歴を記録
+            create_article_history(
+                article_id=str(article_id),
+                action="published",
+                changes={"shopify_article_id": shopify_article_id}
+            )
+            
+            return {
+                "message": "記事をShopifyに投稿しました",
+                "shopify_article_id": shopify_article_id
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Shopifyへの投稿に失敗しました"
+            )
+    except ValueError as e:
+        # Shopify設定が未完了
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Shopify投稿エラー: {str(e)}"
+        )
 

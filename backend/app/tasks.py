@@ -6,13 +6,17 @@ from typing import Dict
 from app.supabase_db import get_article_by_id, update_article
 from app.workflow import ArticleGenerator
 
-def generate_article_task(article_id: str, article_data: Dict):
+def generate_article_task(article_id: str, article_data: Dict, user_id: str = None):
     """
     記事生成のバックグラウンドタスク
+    
+    Args:
+        article_id: 記事ID
+        article_data: 記事データ
+        user_id: ユーザーID（オプション、指定されない場合は記事から取得）
     """
     try:
-        # 記事を取得（user_idは不要なのでNoneを渡す）
-        # 実際にはuser_idが必要だが、バックグラウンドタスクなので全ユーザーから検索
+        # 記事を取得してuser_idを確認
         from app.supabase_client import get_supabase_client
         supabase = get_supabase_client()
         if not supabase:
@@ -25,18 +29,26 @@ def generate_article_task(article_id: str, article_data: Dict):
             return
         
         article = article_response.data[0]
-        user_id = article.get("user_id")
+        if not user_id:
+            user_id = article.get("user_id")
         
-        # 記事生成ワークフローを実行
-        generator = ArticleGenerator()
+        # 記事生成ワークフローを実行（user_idを渡す）
+        generator = ArticleGenerator(user_id=user_id)
         result = generator.generate(article_data)
         
         # 結果を保存
-        update_article(article_id, user_id, {
+        updates = {
             "title": result.get("title"),
             "content": result.get("content"),
             "status": "completed"
-        })
+        }
+        
+        # shopify_jsonがあればJSON文字列として保存
+        if result.get("shopify_json"):
+            import json
+            updates["shopify_json"] = json.dumps(result.get("shopify_json"), ensure_ascii=False)
+        
+        update_article(article_id, user_id, updates)
         
     except Exception as e:
         # エラー処理

@@ -154,6 +154,21 @@ def get_settings_by_user_id(user_id: str) -> List[Dict]:
     return response.data or []
 
 
+def get_setting_by_key(user_id: str, key: str) -> Optional[str]:
+    """ユーザーIDとキーで設定値を取得"""
+    supabase = get_supabase()
+    response = supabase.table("settings")\
+        .select("value")\
+        .eq("user_id", user_id)\
+        .eq("key", key)\
+        .limit(1)\
+        .execute()
+    
+    if response.data and len(response.data) > 0:
+        return response.data[0].get("value")
+    return None
+
+
 def upsert_setting(user_id: str, key: str, value: str) -> Dict:
     """設定を更新または作成"""
     supabase = get_supabase()

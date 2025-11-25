@@ -18,12 +18,38 @@ load_dotenv()
 class ArticleGenerator:
     """記事生成ワークフロー"""
     
-    def __init__(self):
+    def __init__(self, user_id: Optional[str] = None):
+        """
+        Args:
+            user_id: ユーザーID（オプション、ユーザー設定を使用する場合に必要）
+        """
+        # 環境変数からAPIキーを取得（ユーザー設定がない場合のフォールバック）
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         self.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
         self.supabase = get_supabase_client()  # Noneの可能性がある
+        self.user_id = user_id
+        
+        # ユーザー設定からAPIキーを取得（設定されている場合）
+        if user_id:
+            from app.supabase_db import get_setting_by_key
+            
+            # OpenAI API Key
+            user_openai_key = get_setting_by_key(user_id, "openai_api_key")
+            if user_openai_key:
+                self.openai_client = OpenAI(api_key=user_openai_key)
+            
+            # Anthropic API Key
+            user_anthropic_key = get_setting_by_key(user_id, "anthropic_api_key")
+            if user_anthropic_key:
+                self.anthropic_client = Anthropic(api_key=user_anthropic_key)
+            
+            # Gemini API Key
+            user_gemini_key = get_setting_by_key(user_id, "gemini_api_key")
+            if user_gemini_key:
+                genai.configure(api_key=user_gemini_key)
+                self.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
         
     def generate(self, article_data: Dict) -> Dict:
         """
