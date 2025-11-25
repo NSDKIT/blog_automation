@@ -66,7 +66,7 @@ class ArticleGenerator:
             content = self._generate_content(article_data, title, knowledge_context, analysis)
             
             # 6. 画像選定
-            images = self._select_images(article_data.get("sheet_id"))
+            images = self._select_images(article_data.get("keyword"))
             
             # 7. 画像挿入
             content_with_images = self._insert_images(content, images)
@@ -234,24 +234,32 @@ class ArticleGenerator:
         )
         return response.text
     
-    def _select_images(self, sheet_id: str) -> List[Dict]:
-        """Supabaseから画像を取得"""
-        if not self.supabase:
-            # Supabaseが設定されていない場合は空配列を返す
-            print("警告: Supabaseが設定されていません。画像取得をスキップします。")
+    def _select_images(self, keyword: str) -> List[Dict]:
+        """ユーザー登録の画像をキーワードで取得"""
+        if not self.supabase or not self.user_id:
+            # Supabaseが設定されていない、またはuser_idがない場合は空配列を返す
+            print("警告: Supabaseが設定されていないか、user_idがありません。画像取得をスキップします。")
             return []
         
         try:
-            # Supabaseのimagesテーブルから取得
-            # sheet_idはキーワードやカテゴリとして使用
-            response = self.supabase.table("images")\
+            # user_imagesテーブルからユーザーIDとキーワードで取得
+            response = self.supabase.table("user_images")\
                 .select("*")\
-                .eq("category", sheet_id)\
+                .eq("user_id", self.user_id)\
+                .eq("keyword", keyword)\
                 .limit(20)\
                 .execute()
             
             if response.data:
-                return response.data
+                # image_urlをurlに変換して既存の形式に合わせる
+                return [
+                    {
+                        "url": img.get("image_url"),
+                        "alt_text": img.get("alt_text", ""),
+                        "id": img.get("id")
+                    }
+                    for img in response.data
+                ]
             return []
         except Exception as e:
             print(f"画像取得エラー: {e}")

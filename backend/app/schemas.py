@@ -43,7 +43,7 @@ class ArticleCreate(BaseModel):
     important_keyword1: Optional[str] = None
     important_keyword2: Optional[str] = None
     important_keyword3: Optional[str] = None
-    sheet_id: str
+    sheet_id: Optional[str] = None  # 後方互換性のため残すが、使用しない
 
 
 class ArticleResponse(BaseModel):
@@ -79,6 +79,31 @@ class SettingResponse(BaseModel):
     id: UUID
     key: str
     value: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ユーザー画像スキーマ
+class UserImageCreate(BaseModel):
+    keyword: str
+    image_url: str
+    alt_text: Optional[str] = None
+
+
+class UserImageUpdate(BaseModel):
+    keyword: Optional[str] = None
+    image_url: Optional[str] = None
+    alt_text: Optional[str] = None
+
+
+class UserImageResponse(BaseModel):
+    id: UUID
+    keyword: str
+    image_url: str
+    alt_text: Optional[str]
     created_at: datetime
     updated_at: datetime
 

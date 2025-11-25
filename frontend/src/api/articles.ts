@@ -25,7 +25,7 @@ export interface ArticleCreate {
   important_keyword1?: string
   important_keyword2?: string
   important_keyword3?: string
-  sheet_id: string
+  sheet_id?: string  // 後方互換性のため残すが、使用しない
 }
 
 export interface ArticleUpdate {

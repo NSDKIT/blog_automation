@@ -264,3 +264,84 @@ def upsert_setting(user_id: str, key: str, value: str) -> Dict:
         return response.data[0]
     raise Exception("Failed to upsert setting")
 
+
+# ============================================
+# User Images操作
+# ============================================
+
+def get_user_images_by_user_id(user_id: str) -> List[Dict]:
+    """ユーザーIDで画像一覧を取得"""
+    supabase = get_supabase()
+    response = supabase.table("user_images")\
+        .select("*")\
+        .eq("user_id", user_id)\
+        .order("keyword", desc=False)\
+        .order("created_at", desc=True)\
+        .execute()
+    return response.data or []
+
+
+def get_user_images_by_keyword(user_id: str, keyword: str) -> List[Dict]:
+    """ユーザーIDとキーワードで画像を取得"""
+    supabase = get_supabase()
+    response = supabase.table("user_images")\
+        .select("*")\
+        .eq("user_id", user_id)\
+        .eq("keyword", keyword)\
+        .execute()
+    return response.data or []
+
+
+def get_user_image_by_id(image_id: str, user_id: str) -> Optional[Dict]:
+    """画像IDで画像を取得（ユーザーIDでフィルタ）"""
+    supabase = get_supabase()
+    response = supabase.table("user_images")\
+        .select("*")\
+        .eq("id", image_id)\
+        .eq("user_id", user_id)\
+        .limit(1)\
+        .execute()
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+    return None
+
+
+def create_user_image(user_id: str, keyword: str, image_url: str, alt_text: Optional[str] = None) -> Dict:
+    """新規画像を登録"""
+    supabase = get_supabase()
+    image_data = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "keyword": keyword,
+        "image_url": image_url,
+        "alt_text": alt_text
+    }
+    response = supabase.table("user_images").insert(image_data).execute()
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+    raise Exception("Failed to create user image")
+
+
+def update_user_image(image_id: str, user_id: str, updates: Dict) -> Optional[Dict]:
+    """画像を更新"""
+    supabase = get_supabase()
+    response = supabase.table("user_images")\
+        .update(updates)\
+        .eq("id", image_id)\
+        .eq("user_id", user_id)\
+        .execute()
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+    return None
+
+
+def delete_user_image(image_id: str, user_id: str) -> bool:
+    """画像を削除"""
+    supabase = get_supabase()
+    response = supabase.table("user_images")\
+        .delete()\
+        .eq("id", image_id)\
+        .eq("user_id", user_id)\
+        .execute()
+    return True
+

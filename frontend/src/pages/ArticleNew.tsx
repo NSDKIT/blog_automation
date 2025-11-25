@@ -49,7 +49,6 @@ export default function ArticleNew() {
     important_keyword1: '',
     important_keyword2: '',
     important_keyword3: '',
-    sheet_id: '1n908lNr3Pum1BrcSyvxfyCJgiYG-KAhOreJszJHHYJw',
   })
 
   const createMutation = useMutation({
@@ -224,19 +223,6 @@ export default function ArticleNew() {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              キーワードとURLのID <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={formData.sheet_id}
-              onChange={(e) => setFormData({ ...formData, sheet_id: e.target.value })}
-            />
           </div>
 
           <div className="flex justify-end">

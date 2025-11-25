@@ -136,6 +136,28 @@ CREATE INDEX IF NOT EXISTS idx_images_category ON images(category);
 CREATE INDEX IF NOT EXISTS idx_images_keywords ON images USING gin(keywords);
 
 -- ============================================
+-- 7. user_images テーブル（ユーザー画像管理）
+-- ============================================
+CREATE TABLE IF NOT EXISTS user_images (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    keyword VARCHAR(255) NOT NULL,
+    image_url TEXT NOT NULL,
+    alt_text TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- インデックス作成
+CREATE INDEX IF NOT EXISTS idx_user_images_user_id ON user_images(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_images_keyword ON user_images(keyword);
+CREATE INDEX IF NOT EXISTS idx_user_images_user_keyword ON user_images(user_id, keyword);
+
+-- updated_atを自動更新するトリガー
+CREATE TRIGGER update_user_images_updated_at BEFORE UPDATE ON user_images
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
 -- Row Level Security (RLS) の設定
 -- ============================================
 
@@ -211,6 +233,25 @@ ALTER TABLE images ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "images_select" ON images
     FOR SELECT USING (true);
+
+-- user_images テーブル
+ALTER TABLE user_images ENABLE ROW LEVEL SECURITY;
+
+-- 自分の画像のみ読み取り可能
+CREATE POLICY "user_images_select_own" ON user_images
+    FOR SELECT USING (auth.uid()::text = user_id::text);
+
+-- 自分の画像のみ作成可能
+CREATE POLICY "user_images_insert_own" ON user_images
+    FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+
+-- 自分の画像のみ更新可能
+CREATE POLICY "user_images_update_own" ON user_images
+    FOR UPDATE USING (auth.uid()::text = user_id::text);
+
+-- 自分の画像のみ削除可能
+CREATE POLICY "user_images_delete_own" ON user_images
+    FOR DELETE USING (auth.uid()::text = user_id::text);
 
 -- ============================================
 -- サンプルデータの投入（オプション）
