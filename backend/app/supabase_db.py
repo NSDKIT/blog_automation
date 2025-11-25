@@ -345,3 +345,89 @@ def delete_user_image(image_id: str, user_id: str) -> bool:
         .execute()
     return True
 
+
+# ============================================
+# User Options操作
+# ============================================
+
+def get_user_options_by_category(user_id: str, category: str) -> List[Dict]:
+    """ユーザーIDとカテゴリで選択肢一覧を取得"""
+    supabase = get_supabase()
+    response = supabase.table("user_options")\
+        .select("*")\
+        .eq("user_id", user_id)\
+        .eq("category", category)\
+        .order("display_order", desc=False)\
+        .order("created_at", desc=False)\
+        .execute()
+    return response.data or []
+
+
+def get_user_option_by_id(option_id: str, user_id: str) -> Optional[Dict]:
+    """選択肢IDで選択肢を取得（ユーザーIDでフィルタ）"""
+    supabase = get_supabase()
+    response = supabase.table("user_options")\
+        .select("*")\
+        .eq("id", option_id)\
+        .eq("user_id", user_id)\
+        .limit(1)\
+        .execute()
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+    return None
+
+
+def create_user_option(user_id: str, category: str, value: str, display_order: int = 0) -> Dict:
+    """新規選択肢を登録"""
+    supabase = get_supabase()
+    option_data = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "category": category,
+        "value": value,
+        "display_order": display_order
+    }
+    try:
+        response = supabase.table("user_options").insert(option_data).execute()
+        if response.data and len(response.data) > 0:
+            return response.data[0]
+    except Exception as e:
+        # 既に存在する場合はエラーを無視（UNIQUE制約）
+        if "duplicate key" in str(e).lower() or "unique constraint" in str(e).lower():
+            # 既存の選択肢を返す
+            existing = supabase.table("user_options")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .eq("category", category)\
+                .eq("value", value)\
+                .limit(1)\
+                .execute()
+            if existing.data and len(existing.data) > 0:
+                return existing.data[0]
+        raise Exception(f"Failed to create user option: {str(e)}")
+    raise Exception("Failed to create user option")
+
+
+def update_user_option(option_id: str, user_id: str, updates: Dict) -> Optional[Dict]:
+    """選択肢を更新"""
+    supabase = get_supabase()
+    response = supabase.table("user_options")\
+        .update(updates)\
+        .eq("id", option_id)\
+        .eq("user_id", user_id)\
+        .execute()
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+    return None
+
+
+def delete_user_option(option_id: str, user_id: str) -> bool:
+    """選択肢を削除"""
+    supabase = get_supabase()
+    response = supabase.table("user_options")\
+        .delete()\
+        .eq("id", option_id)\
+        .eq("user_id", user_id)\
+        .execute()
+    return True
+

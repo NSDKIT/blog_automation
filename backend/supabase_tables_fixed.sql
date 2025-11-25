@@ -158,6 +158,29 @@ CREATE TRIGGER update_user_images_updated_at BEFORE UPDATE ON user_images
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
+-- 8. user_options テーブル（ユーザー選択肢管理）
+-- ============================================
+CREATE TABLE IF NOT EXISTS user_options (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category VARCHAR(50) NOT NULL,  -- 'target', 'article_type', 'used_type', 'important_keyword'
+    value VARCHAR(255) NOT NULL,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, category, value)
+);
+
+-- インデックス作成
+CREATE INDEX IF NOT EXISTS idx_user_options_user_id ON user_options(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_options_category ON user_options(category);
+CREATE INDEX IF NOT EXISTS idx_user_options_user_category ON user_options(user_id, category);
+
+-- updated_atを自動更新するトリガー
+CREATE TRIGGER update_user_options_updated_at BEFORE UPDATE ON user_options
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
 -- Row Level Security (RLS) の設定
 -- ============================================
 
@@ -251,6 +274,25 @@ CREATE POLICY "user_images_update_own" ON user_images
 
 -- 自分の画像のみ削除可能
 CREATE POLICY "user_images_delete_own" ON user_images
+    FOR DELETE USING (auth.uid()::text = user_id::text);
+
+-- user_options テーブル
+ALTER TABLE user_options ENABLE ROW LEVEL SECURITY;
+
+-- 自分の選択肢のみ読み取り可能
+CREATE POLICY "user_options_select_own" ON user_options
+    FOR SELECT USING (auth.uid()::text = user_id::text);
+
+-- 自分の選択肢のみ作成可能
+CREATE POLICY "user_options_insert_own" ON user_options
+    FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+
+-- 自分の選択肢のみ更新可能
+CREATE POLICY "user_options_update_own" ON user_options
+    FOR UPDATE USING (auth.uid()::text = user_id::text);
+
+-- 自分の選択肢のみ削除可能
+CREATE POLICY "user_options_delete_own" ON user_options
     FOR DELETE USING (auth.uid()::text = user_id::text);
 
 -- ============================================

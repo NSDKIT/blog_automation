@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { settingsApi } from '../api/settings'
 import { imagesApi } from '../api/images'
+import { optionsApi } from '../api/options'
 
 interface ShopifySettings {
   shopify_shop_domain: string
@@ -431,6 +432,134 @@ export default function Settings() {
           </ul>
         ) : (
           <p className="text-gray-500">その他の設定がありません</p>
+        )}
+      </div>
+
+      {/* 選択肢登録セクション */}
+      <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">選択肢登録</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          記事作成時に使用する選択肢を登録してください。
+        </p>
+        <UserOptionsSection />
+      </div>
+    </div>
+  )
+}
+
+function UserOptionsSection() {
+  const queryClient = useQueryClient()
+  const [selectedCategory, setSelectedCategory] = useState<'target' | 'article_type' | 'used_type' | 'important_keyword'>('target')
+  const [newValue, setNewValue] = useState('')
+
+  const { data: options } = useQuery({
+    queryKey: ['options', selectedCategory],
+    queryFn: () => optionsApi.getOptions(selectedCategory),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: optionsApi.createOption,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['options'] })
+      setNewValue('')
+      alert('選択肢を登録しました')
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: optionsApi.deleteOption,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['options'] })
+      alert('選択肢を削除しました')
+    },
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newValue.trim()) {
+      alert('値を入力してください')
+      return
+    }
+    createMutation.mutate({
+      category: selectedCategory,
+      value: newValue.trim(),
+    })
+  }
+
+  const categoryLabels = {
+    target: 'ターゲット層',
+    article_type: '記事の種類',
+    used_type: '使用シーン',
+    important_keyword: '重要視したいキーワード',
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          カテゴリ
+        </label>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value as typeof selectedCategory)}
+          className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        >
+          <option value="target">ターゲット層</option>
+          <option value="article_type">記事の種類</option>
+          <option value="used_type">使用シーン</option>
+          <option value="important_keyword">重要視したいキーワード</option>
+        </select>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            新しい選択肢を追加
+          </label>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={newValue}
+              onChange={(e) => setNewValue(e.target.value)}
+              placeholder={`${categoryLabels[selectedCategory]}の選択肢を入力`}
+              className="flex-1 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+            <button
+              type="submit"
+              disabled={createMutation.isPending}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+            >
+              {createMutation.isPending ? '登録中...' : '追加'}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          登録済み選択肢: {categoryLabels[selectedCategory]}
+        </h3>
+        {options && options.length > 0 ? (
+          <ul className="divide-y divide-gray-200">
+            {options.map((option) => (
+              <li key={option.id} className="py-3 flex justify-between items-center">
+                <span className="text-gray-900">{option.value}</span>
+                <button
+                  onClick={() => {
+                    if (confirm('この選択肢を削除しますか？')) {
+                      deleteMutation.mutate(option.id)
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium disabled:opacity-50"
+                >
+                  削除
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">登録された選択肢がありません</p>
         )}
       </div>
     </div>

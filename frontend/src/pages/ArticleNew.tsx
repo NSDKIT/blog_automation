@@ -1,40 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { articlesApi, ArticleCreate } from '../api/articles'
-
-const TARGET_OPTIONS = [
-  'インドアワーカー',
-  'ゲーマー',
-  'クリエイター',
-  'リモートワーカー',
-  '眼鏡愛用者',
-]
-
-const ARTICLE_TYPE_OPTIONS = [
-  'ハウツー系:「〜する方法」「〜のコツ」「〜の選び方」',
-  '体験・レビュー系:「実際に使ってみた」「〜してみたら」「使用感レポート」',
-  '比較・解説系:「〜と〜の違い」「徹底比較」「プロが解説」',
-  'トレンド・話題系:「今話題の」「最新トレンド」',
-  '問題解決系: 「〜でお悩みの方へ」「〜を解決する」「〜の悩み解消」',
-  '特徴・メリット系: 「〜がすごい理由」「〜の魅力」「〜のメリット」',
-  'ライフスタイル系: 「〜な生活」「〜のある暮らし」「〜でライフスタイル向上」',
-  '数字・リスト系:「5つのポイント」「10の理由」「3つの秘密」',
-  'Eightoon宣伝系',
-]
-
-const USED_TYPE_OPTIONS = ['指定なし', '室内', '仕事', 'デート', '友達と遊ぶ', 'クラブ']
-
-const IMPORTANT_KEYWORD_OPTIONS = [
-  'EIGHTOON',
-  'インドアライフ/インドアワーク',
-  'ブルーライトカット',
-  '鯖江',
-  'βチタニウム',
-  'ゲーミング',
-  '職人技術',
-  '快適性',
-]
+import { optionsApi } from '../api/options'
 
 export default function ArticleNew() {
   const navigate = useNavigate()
@@ -42,13 +10,34 @@ export default function ArticleNew() {
     keyword: '',
     target: '',
     article_type: '',
-    used_type1: '指定なし',
+    used_type1: '',
     used_type2: '',
     used_type3: '',
     prompt: '',
     important_keyword1: '',
     important_keyword2: '',
     important_keyword3: '',
+  })
+
+  // 登録された選択肢を取得
+  const { data: targetOptions } = useQuery({
+    queryKey: ['options', 'target'],
+    queryFn: () => optionsApi.getOptions('target'),
+  })
+
+  const { data: articleTypeOptions } = useQuery({
+    queryKey: ['options', 'article_type'],
+    queryFn: () => optionsApi.getOptions('article_type'),
+  })
+
+  const { data: usedTypeOptions } = useQuery({
+    queryKey: ['options', 'used_type'],
+    queryFn: () => optionsApi.getOptions('used_type'),
+  })
+
+  const { data: importantKeywordOptions } = useQuery({
+    queryKey: ['options', 'important_keyword'],
+    queryFn: () => optionsApi.getOptions('important_keyword'),
   })
 
   const createMutation = useMutation({
@@ -93,12 +82,17 @@ export default function ArticleNew() {
               onChange={(e) => setFormData({ ...formData, target: e.target.value })}
             >
               <option value="">選択してください</option>
-              {TARGET_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+              {targetOptions?.map((option) => (
+                <option key={option.id} value={option.value}>
+                  {option.value}
                 </option>
               ))}
             </select>
+            {(!targetOptions || targetOptions.length === 0) && (
+              <p className="mt-1 text-xs text-gray-500">
+                設定画面で選択肢を登録してください
+              </p>
+            )}
           </div>
 
           <div>
@@ -112,12 +106,17 @@ export default function ArticleNew() {
               onChange={(e) => setFormData({ ...formData, article_type: e.target.value })}
             >
               <option value="">選択してください</option>
-              {ARTICLE_TYPE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+              {articleTypeOptions?.map((option) => (
+                <option key={option.id} value={option.value}>
+                  {option.value}
                 </option>
               ))}
             </select>
+            {(!articleTypeOptions || articleTypeOptions.length === 0) && (
+              <p className="mt-1 text-xs text-gray-500">
+                設定画面で選択肢を登録してください
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4">
@@ -128,9 +127,10 @@ export default function ArticleNew() {
                 value={formData.used_type1}
                 onChange={(e) => setFormData({ ...formData, used_type1: e.target.value })}
               >
-                {USED_TYPE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                <option value="">選択してください</option>
+                {usedTypeOptions?.map((option) => (
+                  <option key={option.id} value={option.value}>
+                    {option.value}
                   </option>
                 ))}
               </select>
@@ -143,9 +143,9 @@ export default function ArticleNew() {
                 onChange={(e) => setFormData({ ...formData, used_type2: e.target.value })}
               >
                 <option value="">選択してください</option>
-                {USED_TYPE_OPTIONS.filter((o) => o !== '指定なし').map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {usedTypeOptions?.map((option) => (
+                  <option key={option.id} value={option.value}>
+                    {option.value}
                   </option>
                 ))}
               </select>
@@ -158,14 +158,19 @@ export default function ArticleNew() {
                 onChange={(e) => setFormData({ ...formData, used_type3: e.target.value })}
               >
                 <option value="">選択してください</option>
-                {USED_TYPE_OPTIONS.filter((o) => o !== '指定なし').map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {usedTypeOptions?.map((option) => (
+                  <option key={option.id} value={option.value}>
+                    {option.value}
                   </option>
                 ))}
               </select>
             </div>
           </div>
+          {(!usedTypeOptions || usedTypeOptions.length === 0) && (
+            <p className="text-xs text-gray-500">
+              設定画面で選択肢を登録してください
+            </p>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700">システムプロンプト</label>
@@ -186,9 +191,9 @@ export default function ArticleNew() {
                 onChange={(e) => setFormData({ ...formData, important_keyword1: e.target.value })}
               >
                 <option value="">選択してください</option>
-                {IMPORTANT_KEYWORD_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {importantKeywordOptions?.map((option) => (
+                  <option key={option.id} value={option.value}>
+                    {option.value}
                   </option>
                 ))}
               </select>
@@ -201,9 +206,9 @@ export default function ArticleNew() {
                 onChange={(e) => setFormData({ ...formData, important_keyword2: e.target.value })}
               >
                 <option value="">選択してください</option>
-                {IMPORTANT_KEYWORD_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {importantKeywordOptions?.map((option) => (
+                  <option key={option.id} value={option.value}>
+                    {option.value}
                   </option>
                 ))}
               </select>
@@ -216,14 +221,19 @@ export default function ArticleNew() {
                 onChange={(e) => setFormData({ ...formData, important_keyword3: e.target.value })}
               >
                 <option value="">選択してください</option>
-                {IMPORTANT_KEYWORD_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {importantKeywordOptions?.map((option) => (
+                  <option key={option.id} value={option.value}>
+                    {option.value}
                   </option>
                 ))}
               </select>
             </div>
           </div>
+          {(!importantKeywordOptions || importantKeywordOptions.length === 0) && (
+            <p className="text-xs text-gray-500">
+              設定画面で選択肢を登録してください
+            </p>
+          )}
 
           <div className="flex justify-end">
             <button

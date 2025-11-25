@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth as auth_router, articles as articles_router, settings as settings_router, images as images_router
+from app.routers import auth as auth_router, articles as articles_router, settings as settings_router, images as images_router, options as options_router
 from app.config import settings as app_settings
 
 # データベーステーブルはSupabaseで管理（SQLスクリプトで作成済み）
@@ -25,6 +25,7 @@ app.include_router(auth_router.router, prefix="/api/auth", tags=["認証"])
 app.include_router(articles_router.router, prefix="/api/articles", tags=["記事"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["設定"])
 app.include_router(images_router.router, prefix="/api/images", tags=["画像"])
+app.include_router(options_router.router, prefix="/api/options", tags=["選択肢"])
 
 
 @app.get("/")

@@ -110,3 +110,27 @@ class UserImageResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+# ユーザー選択肢スキーマ
+class UserOptionCreate(BaseModel):
+    category: str  # 'target', 'article_type', 'used_type', 'important_keyword'
+    value: str
+    display_order: Optional[int] = 0
+
+
+class UserOptionUpdate(BaseModel):
+    value: Optional[str] = None
+    display_order: Optional[int] = None
+
+
+class UserOptionResponse(BaseModel):
+    id: UUID
+    category: str
+    value: str
+    display_order: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
