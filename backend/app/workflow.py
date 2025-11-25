@@ -3,6 +3,7 @@
 メガネ記事案ジェネレーター.ymlのロジックを移植
 """
 import os
+import re
 import json
 import httpx
 from typing import Dict, List, Optional
@@ -296,9 +297,12 @@ class ArticleGenerator:
         """
         
         response = self.gemini_model.generate_content(prompt)
-        json_str = response.text.strip()
-        # JSONをパース
-        return json.loads(json_str)
+        json_str = self._extract_json_string(response.text)
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as exc:
+            snippet = (json_str[:200] + "...") if len(json_str) > 200 else json_str
+            raise ValueError(f"GeminiレスポンスをJSONとして解析できません: {snippet}") from exc
     
     def _extract_optimal_length(self, text: str) -> str:
         """最適文字数を抽出"""
@@ -309,4 +313,21 @@ class ArticleGenerator:
         """頻出ワードを抽出"""
         # 実装が必要
         return "メガネ, 眼鏡, ブルーライト"
+
+    def _extract_json_string(self, raw_text: str) -> str:
+        """GeminiのレスポンスからJSON文字列部分のみを抽出"""
+        if not raw_text:
+            raise ValueError("Geminiレスポンスが空です")
+        
+        text = raw_text.strip()
+        if text.startswith("```"):
+            # ```json ... ``` の形式を削除
+            text = re.sub(r"^```(?:json)?", "", text, count=1).strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+        
+        json_match = re.search(r"\{.*\}", text, re.DOTALL)
+        if json_match:
+            return json_match.group(0).strip()
+        return text
 
