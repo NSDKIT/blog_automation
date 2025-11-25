@@ -86,7 +86,22 @@ async def upload_image_to_wordpress(
                 return result["id"]
             return None
     except httpx.HTTPStatusError as e:
-        raise Exception(f"WordPress API エラー: {e.response.status_code} - {e.response.text}")
+        error_detail = ""
+        if e.response.status_code == 404:
+            error_detail = (
+                f"WordPress REST APIエンドポイントが見つかりません (404)。\n"
+                f"確認事項:\n"
+                f"1. WordPressサイトURLが正しいか確認してください（例: https://example.com）\n"
+                f"2. WordPress.comのサイトを使用している場合、通常のWordPress REST APIは利用できません。\n"
+                f"   自己ホスト型のWordPressサイト（WordPress.org）を使用してください。\n"
+                f"3. REST APIが有効になっているか確認してください。\n"
+                f"   試しにブラウザで {api_url} にアクセスして確認してください。\n"
+                f"4. アプリケーションパスワードが正しいか確認してください。\n"
+                f"\nエラー詳細: {e.response.text[:500]}"
+            )
+        else:
+            error_detail = f"WordPress API エラー: {e.response.status_code} - {e.response.text[:500]}"
+        raise Exception(error_detail)
     except httpx.RequestError as e:
         raise Exception(f"WordPress API リクエストエラー: {str(e)}")
     except Exception as e:
@@ -157,7 +172,22 @@ async def publish_article_to_wordpress(
                 return result["id"]
             return None
     except httpx.HTTPStatusError as e:
-        raise Exception(f"WordPress API エラー: {e.response.status_code} - {e.response.text}")
+        error_detail = ""
+        if e.response.status_code == 404:
+            error_detail = (
+                f"WordPress REST APIエンドポイントが見つかりません (404)。\n"
+                f"確認事項:\n"
+                f"1. WordPressサイトURLが正しいか確認してください（例: https://example.com）\n"
+                f"2. WordPress.comのサイトを使用している場合、通常のWordPress REST APIは利用できません。\n"
+                f"   自己ホスト型のWordPressサイト（WordPress.org）を使用してください。\n"
+                f"3. REST APIが有効になっているか確認してください。\n"
+                f"   試しにブラウザで {api_url} にアクセスして確認してください。\n"
+                f"4. アプリケーションパスワードが正しいか確認してください。\n"
+                f"\nエラー詳細: {e.response.text[:500]}"
+            )
+        else:
+            error_detail = f"WordPress API エラー: {e.response.status_code} - {e.response.text[:500]}"
+        raise Exception(error_detail)
     except httpx.RequestError as e:
         raise Exception(f"WordPress API リクエストエラー: {str(e)}")
     except Exception as e:

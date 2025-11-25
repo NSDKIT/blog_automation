@@ -448,6 +448,14 @@ export default function Settings() {
       {/* WordPress設定セクション */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">WordPress設定</h2>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+          <p className="text-sm text-yellow-800 font-semibold mb-2">⚠️ 重要: WordPress.comのサイトは使用できません</p>
+          <p className="text-xs text-yellow-700">
+            この機能は自己ホスト型のWordPressサイト（WordPress.org）のみ対応しています。
+            WordPress.comのサイト（例: example.wordpress.com）では使用できません。
+            自己ホスト型のWordPressサイトをお使いください。
+          </p>
+        </div>
         <p className="text-sm text-gray-500 mb-4">
           記事をWordPressに投稿するために、以下の情報を設定してください。
         </p>
@@ -465,7 +473,8 @@ export default function Settings() {
               placeholder="例: https://example.com"
             />
             <p className="mt-1 text-xs text-gray-500">
-              WordPressサイトのURL（https://から始まる完全なURL）
+              WordPressサイトのURL（https://から始まる完全なURL）<br />
+              <span className="text-red-600">※ WordPress.comのサイト（例: example.wordpress.com）は使用できません</span>
             </p>
           </div>
           <div>
