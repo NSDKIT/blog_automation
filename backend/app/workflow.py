@@ -7,7 +7,7 @@ import json
 import httpx
 from typing import Dict, List, Optional
 from openai import OpenAI
-from anthropic import Anthropic
+from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 import google.generativeai as genai
 from dotenv import load_dotenv
 from app.supabase_client import get_supabase_client
@@ -231,15 +231,23 @@ class ArticleGenerator:
         [まとめ]
         """
         
-        response = self.anthropic_client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=4000,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        return response.content[0].text
+        if hasattr(self.anthropic_client, "messages"):
+            response = self.anthropic_client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=4000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return response.content[0].text
+        else:
+            completion_prompt = f"{HUMAN_PROMPT} {prompt}\n{AI_PROMPT}"
+            response = self.anthropic_client.completions.create(
+                model="claude-2.1",
+                max_tokens_to_sample=4000,
+                prompt=completion_prompt,
+            )
+            return response.completion.strip()
     
     def _select_images(self, sheet_id: str) -> List[Dict]:
         """Supabaseから画像を取得"""
