@@ -30,7 +30,7 @@ def generate_article_task(article_id: str, article_data: Dict, user_id: str = No
         
         article = article_response.data[0]
         if not user_id:
-            user_id = article.get("user_id")
+        user_id = article.get("user_id")
         
         # 記事生成ワークフローを実行（user_idを渡す）
         generator = ArticleGenerator(user_id=user_id)
