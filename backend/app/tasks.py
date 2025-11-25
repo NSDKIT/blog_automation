@@ -3,7 +3,7 @@
 実際のワークフロー処理を実装
 """
 from typing import Dict
-from app.supabase_db import get_article_by_id, update_article
+from app.supabase_db import update_article, create_article_history
 from app.workflow import ArticleGenerator
 
 def generate_article_task(article_id: str, article_data: Dict, user_id: str = None):
@@ -62,6 +62,11 @@ def generate_article_task(article_id: str, article_data: Dict, user_id: str = No
                     article_id,
                     article.get("user_id"),
                     {"status": "failed", "error_message": error_message[:1000]}
+                )
+                create_article_history(
+                    article_id=article_id,
+                    action="failed",
+                    changes={"error_message": error_message[:1000]}
                 )
         except:
             pass

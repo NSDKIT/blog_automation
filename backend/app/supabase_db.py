@@ -6,6 +6,10 @@ from app.supabase_client import get_supabase_client
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 import uuid
+from postgrest.exceptions import APIError
+
+
+_article_error_column_supported: Optional[bool] = None
 
 
 def get_supabase():
@@ -14,6 +18,60 @@ def get_supabase():
     if not client:
         raise ValueError("Supabase client is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY.")
     return client
+
+
+def _supports_article_error_column() -> bool:
+    """
+    Supabase上にerror_messageカラムが存在するかをキャッシュ付きで判定
+    存在しない場合はFalseを返し、以後の更新でerror_messageを除外する
+    """
+    global _article_error_column_supported
+    if _article_error_column_supported is not None:
+        return _article_error_column_supported
+
+    supabase = get_supabase()
+    try:
+        supabase.table("articles").select("error_message").limit(1).execute()
+        _article_error_column_supported = True
+    except APIError as exc:
+        if "error_message" in str(exc):
+            _article_error_column_supported = False
+        else:
+            raise
+    return _article_error_column_supported
+
+
+def _load_latest_article_error(article_id: str) -> Optional[str]:
+    """記事履歴から直近のエラーメッセージを取得"""
+    supabase = get_supabase()
+    response = (
+        supabase.table("article_histories")
+        .select("changes, created_at")
+        .eq("article_id", article_id)
+        .eq("action", "failed")
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if response.data and len(response.data) > 0:
+        changes = response.data[0].get("changes") or {}
+        return changes.get("error_message")
+    return None
+
+
+def _attach_error_message(article: Optional[Dict]) -> Optional[Dict]:
+    """レスポンスにerror_messageキーを追加（必要なら履歴から補完）"""
+    if not article:
+        return article
+
+    article.setdefault("error_message", None)
+    if article.get("status") == "failed" and not article.get("error_message"):
+        try:
+            article["error_message"] = _load_latest_article_error(article.get("id"))
+        except Exception:
+            # 履歴の取得に失敗しても既存処理には影響させない
+            pass
+    return article
 
 
 # ============================================
@@ -67,7 +125,8 @@ def get_articles_by_user_id(user_id: str, skip: int = 0, limit: int = 100) -> Li
         .order("created_at", desc=True)\
         .range(skip, skip + limit - 1)\
         .execute()
-    return response.data or []
+    articles = response.data or []
+    return [_attach_error_message(article) for article in articles]
 
 
 def get_article_by_id(article_id: str, user_id: str) -> Optional[Dict]:
@@ -80,7 +139,7 @@ def get_article_by_id(article_id: str, user_id: str) -> Optional[Dict]:
         .limit(1)\
         .execute()
     if response.data and len(response.data) > 0:
-        return response.data[0]
+        return _attach_error_message(response.data[0])
     return None
 
 
@@ -97,20 +156,23 @@ def create_article(user_id: str, keyword: str, target: str, article_type: str, s
     }
     response = supabase.table("articles").insert(article_data).execute()
     if response.data and len(response.data) > 0:
-        return response.data[0]
+        return _attach_error_message(response.data[0])
     raise Exception("Failed to create article")
 
 
 def update_article(article_id: str, user_id: str, updates: Dict) -> Optional[Dict]:
     """記事を更新"""
     supabase = get_supabase()
+    update_payload = dict(updates)
+    if "error_message" in update_payload and not _supports_article_error_column():
+        update_payload.pop("error_message", None)
     response = supabase.table("articles")\
-        .update(updates)\
+        .update(update_payload)\
         .eq("id", article_id)\
         .eq("user_id", user_id)\
         .execute()
     if response.data and len(response.data) > 0:
-        return response.data[0]
+        return _attach_error_message(response.data[0])
     return None
 
 
