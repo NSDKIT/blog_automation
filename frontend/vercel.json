@@ -7,7 +7,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://your-backend-url.herokuapp.com/api/$1"
+      "destination": "https://blog-automation-api-prod-1077654888a6.herokuapp.com/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
