@@ -10,6 +10,12 @@ interface ShopifySettings {
   shopify_blog_id: string
 }
 
+interface WordPressSettings {
+  wordpress_url: string
+  wordpress_user: string
+  wordpress_pass: string
+}
+
 
 function ImageKeywordSection() {
   const queryClient = useQueryClient()
@@ -281,6 +287,11 @@ export default function Settings() {
     shopify_access_token: '',
     shopify_blog_id: '',
   })
+  const [wordpressSettings, setWordpressSettings] = useState<WordPressSettings>({
+    wordpress_url: '',
+    wordpress_user: '',
+    wordpress_pass: '',
+  })
 
   const { data: settings } = useQuery({
     queryKey: ['settings'],
@@ -300,6 +311,15 @@ export default function Settings() {
         shopify_blog_id: blogId,
       })
 
+      const wpUrl = settings.find(s => s.key === 'wordpress_url')?.value || ''
+      const wpUser = settings.find(s => s.key === 'wordpress_user')?.value || ''
+      const wpPass = settings.find(s => s.key === 'wordpress_pass')?.value || ''
+      
+      setWordpressSettings({
+        wordpress_url: wpUrl,
+        wordpress_user: wpUser,
+        wordpress_pass: wpPass,
+      })
     }
   }, [settings])
 
@@ -325,6 +345,29 @@ export default function Settings() {
               onSuccess: () => {
                 updateMutation.mutate(
                   { key: 'shopify_blog_id', value: shopifySettings.shopify_blog_id }
+                )
+              },
+            }
+          )
+        },
+      }
+    )
+  }
+
+  const handleWordPressSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // 3つの設定を保存
+    updateMutation.mutate(
+      { key: 'wordpress_url', value: wordpressSettings.wordpress_url },
+      {
+        onSuccess: () => {
+          updateMutation.mutate(
+            { key: 'wordpress_user', value: wordpressSettings.wordpress_user },
+            {
+              onSuccess: () => {
+                updateMutation.mutate(
+                  { key: 'wordpress_pass', value: wordpressSettings.wordpress_pass }
                 )
               },
             }
@@ -400,6 +443,71 @@ export default function Settings() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
           >
             {updateMutation.isPending ? '保存中...' : 'Shopify設定を保存'}
+          </button>
+        </form>
+      </div>
+
+      {/* WordPress設定セクション */}
+      <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">WordPress設定</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          記事をWordPressに投稿するために、以下の情報を設定してください。
+        </p>
+        <form onSubmit={handleWordPressSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              WordPress REST API URL <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="url"
+              required
+              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              value={wordpressSettings.wordpress_url}
+              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_url: e.target.value })}
+              placeholder="例: https://nsdkit0224-msvag.wpcomstaging.com/wp-json/wp/v2/posts"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              WordPress REST APIの完全なエンドポイントURL
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ユーザー名 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              value={wordpressSettings.wordpress_user}
+              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_user: e.target.value })}
+              placeholder="例: nsdkit0224"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              サイトのダッシュボードで確認したユーザー名
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              アプリケーションパスワード <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              required
+              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              value={wordpressSettings.wordpress_pass}
+              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_pass: e.target.value })}
+              placeholder="Application Passwordsで設定されたパスワード"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Application Passwordsで設定されたパスワード（例: sPVm AtAS 8Uzu B4x1 FvwP AnMc）
+            </p>
+          </div>
+          <button
+            type="submit"
+            disabled={updateMutation.isPending}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+          >
+            {updateMutation.isPending ? '保存中...' : 'WordPress設定を保存'}
           </button>
         </form>
       </div>
