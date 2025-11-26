@@ -294,15 +294,14 @@ async def publish_article_to_wordpress_endpoint(
             slug = re.sub(r'[^\w\s-]', '', title).strip()
             slug = re.sub(r'[-\s]+', '-', slug)
         
-        # WordPressに投稿
+        # WordPressに投稿（提供コードと同じ形式）
         wordpress_article_id = await publish_article_to_wordpress(
             user_id=user_id,
             title=title,
             content=content,
             slug=slug,
             featured_media_id=featured_media_id,
-            status="publish",
-            comment_status="closed"
+            status="draft"  # 提供コードと同じデフォルト値
         )
         
         if wordpress_article_id:

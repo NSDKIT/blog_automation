@@ -6,6 +6,7 @@ WordPress.comのREST API v2を使用
 import httpx
 import mimetypes
 import json
+from datetime import datetime
 from typing import Dict, Optional
 from app.supabase_db import get_setting_by_key
 
@@ -219,8 +220,8 @@ async def publish_article_to_wordpress(
     content: str,
     slug: Optional[str] = None,
     featured_media_id: Optional[int] = None,
-    status: str = "publish",
-    comment_status: str = "closed",
+    status: str = "draft",  # 提供コードと同じデフォルト値
+    comment_status: Optional[str] = None,
     category_ids: Optional[list] = None,
     tag_ids: Optional[list] = None
 ) -> Optional[int]:
@@ -257,18 +258,18 @@ async def publish_article_to_wordpress(
     else:
         api_url = f"{site_url}/wp-json/wp/v2/posts"
     
-    # 記事データを準備（提供されたコードの方式に従う）
+    # 記事データを準備（提供されたコードの方式に完全に従う）
     post_data = {
+        'status': status,
         'title': title,
         'content': content,
-        'format': 'standard',
-        'status': status,
-        'comment_status': comment_status,
+        'date': datetime.now().isoformat(),  # 提供コードと同じ形式
     }
     
     if slug:
         post_data['slug'] = slug
     
+    # オプション項目（提供コードにはないが、既存機能として残す）
     if featured_media_id:
         post_data['featured_media'] = featured_media_id
     
@@ -277,6 +278,9 @@ async def publish_article_to_wordpress(
     
     if tag_ids:
         post_data['tags'] = tag_ids
+    
+    if comment_status:
+        post_data['comment_status'] = comment_status
     
     # ヘッダー設定（提供されたコードの方式に従う）
     headers = {
