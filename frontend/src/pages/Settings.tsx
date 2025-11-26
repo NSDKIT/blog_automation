@@ -456,7 +456,7 @@ export default function Settings() {
         <form onSubmit={handleWordPressSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              WordPress REST API URL <span className="text-red-500">*</span>
+              WordPressサイトURL <span className="text-red-500">*</span>
             </label>
             <input
               type="url"
@@ -464,10 +464,10 @@ export default function Settings() {
               className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               value={wordpressSettings.wordpress_url}
               onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_url: e.target.value })}
-              placeholder="例: https://nsdkit0224-msvag.wpcomstaging.com/wp-json/wp/v2/posts"
+              placeholder="例: https://nsdkit0224-msvag.wpcomstaging.com"
             />
             <p className="mt-1 text-xs text-gray-500">
-              WordPress REST APIの完全なエンドポイントURL
+              WordPressサイトのベースURL（/wp-json/wp/v2/postsは自動的に追加されます）
             </p>
           </div>
           <div>

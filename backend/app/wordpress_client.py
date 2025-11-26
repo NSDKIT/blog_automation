@@ -18,8 +18,15 @@ def get_wordpress_config(user_id: str) -> Optional[Dict[str, str]]:
     if not wp_url or not wp_user or not wp_pass:
         return None
     
+    # URLに/wp-json/wp/v2/postsが含まれていない場合は自動的に追加
+    base_url = wp_url.rstrip('/')
+    if '/wp-json/wp/v2/posts' not in base_url:
+        api_url = f"{base_url}/wp-json/wp/v2/posts"
+    else:
+        api_url = base_url
+    
     return {
-        "url": wp_url,
+        "url": api_url,
         "user": wp_user,
         "pass": wp_pass
     }
