@@ -462,10 +462,10 @@ export default function Settings() {
               className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               value={wordpressSettings.wordpress_site_url}
               onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_site_url: e.target.value })}
-              placeholder="例: https://example.wordpress.com"
+              placeholder="例: https://your-site.com/wp-json/wp/v2/posts"
             />
             <p className="mt-1 text-xs text-gray-500">
-              WordPress.comのサイトURL（例: https://example.wordpress.com）
+              WordPress REST APIの完全なエンドポイントURL（例: https://your-site.com/wp-json/wp/v2/posts）
             </p>
           </div>
           <div>

@@ -1,10 +1,9 @@
 """
 WordPress REST API クライアント
 ユーザーごとのWordPress設定を使用して記事を投稿
-Application PasswordプラグインまたはWordPress 5.6以降の標準機能を使用
+WordPress.comのREST API v2を使用
 """
 import httpx
-import base64
 import mimetypes
 import json
 from typing import Dict, Optional
@@ -168,28 +167,31 @@ async def upload_image_to_wordpress(
         else:
             mime_type = "image/jpeg"
     
-    # WordPress REST API v2エンドポイントを使用（提供されたコードの方式に従う）
-    api_url = f"{config['site_url'].rstrip('/')}/wp-json/wp/v2/media"
+    # WordPress REST API v2エンドポイントを使用
+    # 設定が既に完全なエンドポイントURL（/wp-json/wp/v2/mediaを含む）の場合はそのまま使用
+    site_url = config['site_url'].rstrip('/')
+    if '/wp-json/wp/v2/media' in site_url:
+        api_url = site_url
+    elif '/wp-json/wp/v2/posts' in site_url:
+        # 記事エンドポイントが設定されている場合は、mediaエンドポイントに置き換え
+        api_url = site_url.replace('/wp-json/wp/v2/posts', '/wp-json/wp/v2/media')
+    else:
+        api_url = f"{site_url}/wp-json/wp/v2/media"
     
-    # Basic認証（提供されたコードの方式に従う）
-    auth_str = f"{config['username']}:{config['api_token']}"
-    auth_base64_bytes = base64.b64encode(auth_str.encode(encoding='utf-8'))
-    auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
-    
-    # ヘッダー設定（提供されたコードの方式に従う）
+    # ヘッダー設定
     headers = {
-        'Authorization': 'Basic ' + auth_base64,
         'Content-Type': mime_type,
-        'Content-Disposition': f'attachiment; filename={image_filename}'  # 提供コードのtypoに合わせる
+        'Content-Disposition': f'attachment; filename={image_filename}'
     }
     
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            # 画像データを直接送信（提供されたコードの方式に従う）
+            # 画像データを直接送信（authパラメータでBasic認証を自動設定）
             response = await client.post(
                 api_url,
                 content=image_data,
-                headers=headers
+                headers=headers,
+                auth=(config['username'], config['api_token'])
             )
             
             # レスポンスをチェック（200 OKまたは201 Createdが成功）
@@ -247,18 +249,13 @@ async def publish_article_to_wordpress(
     if not config:
         raise ValueError("WordPress設定が完了していません。設定ページでWordPress情報を登録してください。")
     
-    # WordPress REST API v2エンドポイントを使用（提供されたコードの方式に従う）
-    api_url = f"{config['site_url'].rstrip('/')}/wp-json/wp/v2/posts"
-    
-    # Basic認証（提供されたコードの方式に従う）
-    auth_str = f"{config['username']}:{config['api_token']}"
-    auth_base64_bytes = base64.b64encode(auth_str.encode(encoding='utf-8'))
-    auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
-    
-    headers = {
-        'Authorization': 'Basic ' + auth_base64,
-        'Content-Type': 'application/json'
-    }
+    # WordPress REST API v2エンドポイントを使用
+    # 設定が既に完全なエンドポイントURL（/wp-json/wp/v2/postsを含む）の場合はそのまま使用
+    site_url = config['site_url'].rstrip('/')
+    if '/wp-json/wp/v2/posts' in site_url:
+        api_url = site_url
+    else:
+        api_url = f"{site_url}/wp-json/wp/v2/posts"
     
     # 記事データを準備（提供されたコードの方式に従う）
     post_data = {
@@ -281,23 +278,49 @@ async def publish_article_to_wordpress(
     if tag_ids:
         post_data['tags'] = tag_ids
     
+    # ヘッダー設定（Content-Typeのみ、認証はauthパラメータで自動設定）
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            response = await client.post(api_url, json=post_data, headers=headers)
+            # デバッグ: リクエスト情報をログに記録
+            print(f"[WordPress投稿] API URL: {api_url}")
+            print(f"[WordPress投稿] リクエストデータ: {json.dumps(post_data, ensure_ascii=False)[:200]}")
+            
+            # authパラメータを使用してBasic認証を自動設定（提供されたコードの方式に従う）
+            response = await client.post(
+                api_url,
+                json=post_data,
+                headers=headers,
+                auth=(config['username'], config['api_token'])
+            )
+            
+            # デバッグ: レスポンス情報をログに記録
+            print(f"[WordPress投稿] ステータスコード: {response.status_code}")
+            print(f"[WordPress投稿] レスポンスヘッダー: {dict(response.headers)}")
+            print(f"[WordPress投稿] レスポンス本文（最初の500文字）: {response.text[:500]}")
             
             # レスポンスをチェック（200 OKまたは201 Createdが成功）
             # WordPress REST API v2は場合によって200を返すこともある
             if response.status_code in [200, 201]:
                 try:
                     result = response.json()
+                    print(f"[WordPress投稿] パースされたJSON: {json.dumps(result, ensure_ascii=False)[:500]}")
+                    
                     # レスポンスが配列の場合（WordPress REST API v2の一部のエンドポイント）
                     if isinstance(result, list) and len(result) > 0:
                         result = result[0]
+                        print(f"[WordPress投稿] 配列から最初の要素を取得: {json.dumps(result, ensure_ascii=False)[:500]}")
                     
                     # idフィールドを確認
                     article_id = result.get("id")
+                    print(f"[WordPress投稿] 取得した記事ID: {article_id}")
+                    
                     if article_id:
                         # 正常に記事IDを取得できた
+                        print(f"[WordPress投稿] 成功: 記事ID {article_id} を返します")
                         return int(article_id)  # 整数として返す
                     else:
                         # idが存在しない場合でも、レスポンスにstatusやlinkがあれば投稿は成功している可能性が高い
@@ -309,6 +332,7 @@ async def publish_article_to_wordpress(
                         if result.get("link"):
                             error_msg += f" link='{result.get('link')}'"
                         error_msg += f" レスポンス: {json.dumps(result, ensure_ascii=False)[:500]}"
+                        print(f"[WordPress投稿] エラー: {error_msg}")
                         raise WordPressError(
                             response.status_code,
                             response.reason_phrase or "Unknown",
@@ -316,10 +340,12 @@ async def publish_article_to_wordpress(
                         )
                 except (ValueError, json.JSONDecodeError) as e:
                     # JSON解析に失敗した場合、エラーメッセージを返す
+                    error_msg = f"JSON解析エラー: {str(e)}。レスポンス: {response.text[:500]}"
+                    print(f"[WordPress投稿] JSON解析エラー: {error_msg}")
                     raise WordPressError(
                         response.status_code,
                         response.reason_phrase or "Unknown",
-                        f"JSON解析エラー: {str(e)}。レスポンス: {response.text[:500]}"
+                        error_msg
                     )
             else:
                 # 200/201以外の場合は_check_responseで処理
