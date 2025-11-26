@@ -306,10 +306,19 @@ async def publish_article_to_wordpress_endpoint(
         )
         
         if wordpress_article_id:
-            # 記事を更新（wordpress_article_idを保存するカラムが必要）
-            # 現在はshopify_article_idしかないので、settingsテーブルに保存するか、
-            # articlesテーブルにwordpress_article_idカラムを追加する必要があります
-            # ここでは一旦、履歴に記録するだけにします
+            # 記事を更新（statusをpublishedに更新）
+            from app.supabase_db import update_article
+            update_article(
+                article_id=str(article_id),
+                user_id=user_id,
+                updates={
+                    "status": "published",
+                    # wordpress_article_idカラムが存在する場合は保存
+                    # 現時点では履歴に記録するだけ
+                }
+            )
+            
+            # 履歴に記録
             create_article_history(
                 article_id=str(article_id),
                 action="published_wordpress",
@@ -333,7 +342,18 @@ async def publish_article_to_wordpress_endpoint(
         )
     except WordPressError as e:
         # WordPress.com APIエラー
-        error_detail = f"WordPress.com API エラー [{e.status_code}]: {e.message}"
+        # 200 OKの場合は、実際に投稿されている可能性があるので、確認する
+        if e.status_code == 200:
+            # 200 OKでエラーが発生した場合、実際には投稿されている可能性がある
+            # エラーメッセージに含まれるJSONを確認
+            error_detail = (
+                f"WordPress.com API エラー [{e.status_code}]: {e.message}\n\n"
+                f"注意: ステータスコード200が返ってきていますが、エラーが発生しました。\n"
+                f"WordPressサイトで実際に記事が投稿されているか確認してください。\n"
+                f"もし投稿されていれば、これはコードの問題です。"
+            )
+        else:
+            error_detail = f"WordPress.com API エラー [{e.status_code}]: {e.message}"
         if e.status_code == 403:
             error_detail += (
                 "\n\n認証エラーの可能性があります。以下を確認してください:\n"

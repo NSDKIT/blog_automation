@@ -293,19 +293,40 @@ async def publish_article_to_wordpress(
                     # レスポンスが配列の場合（WordPress REST API v2の一部のエンドポイント）
                     if isinstance(result, list) and len(result) > 0:
                         result = result[0]
-                    if result.get("id"):
-                        return result["id"]
-                except (ValueError, json.JSONDecodeError):
+                    
+                    # idフィールドを確認
+                    article_id = result.get("id")
+                    if article_id:
+                        # 正常に記事IDを取得できた
+                        return int(article_id)  # 整数として返す
+                    else:
+                        # idが存在しない場合でも、レスポンスにstatusやlinkがあれば投稿は成功している可能性が高い
+                        # この場合は、レスポンス全体をログに記録してエラーを返す
+                        # ただし、実際にWordPressに投稿されている可能性があることを示す
+                        error_msg = f"WordPress APIレスポンスに記事IDが含まれていません。"
+                        if result.get("status"):
+                            error_msg += f" status='{result.get('status')}'"
+                        if result.get("link"):
+                            error_msg += f" link='{result.get('link')}'"
+                        error_msg += f" レスポンス: {json.dumps(result, ensure_ascii=False)[:500]}"
+                        raise WordPressError(
+                            response.status_code,
+                            response.reason_phrase or "Unknown",
+                            error_msg
+                        )
+                except (ValueError, json.JSONDecodeError) as e:
                     # JSON解析に失敗した場合、エラーメッセージを返す
                     raise WordPressError(
                         response.status_code,
                         response.reason_phrase or "Unknown",
-                        f"JSON解析エラー: レスポンスがJSON形式ではありません。レスポンス: {response.text[:200]}"
+                        f"JSON解析エラー: {str(e)}。レスポンス: {response.text[:500]}"
                     )
             else:
+                # 200/201以外の場合は_check_responseで処理
                 result = _check_response(response, 201)
-                if result.get("id"):
-                    return result["id"]
+                article_id = result.get("id")
+                if article_id:
+                    return int(article_id)  # 整数として返す
             return None
     except WordPressError:
         raise
