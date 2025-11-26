@@ -58,9 +58,5 @@ export const articlesApi = {
     const response = await apiClient.post(`/articles/${id}/publish`)
     return response.data
   },
-  publishToWordPress: async (id: string) => {
-    const response = await apiClient.post(`/articles/${id}/publish-wordpress`)
-    return response.data
-  },
 }
 

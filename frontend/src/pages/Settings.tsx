@@ -10,11 +10,6 @@ interface ShopifySettings {
   shopify_blog_id: string
 }
 
-interface WordPressSettings {
-  wordpress_site_url: string
-  wordpress_username: string
-  wordpress_api_token: string
-}
 
 function ImageKeywordSection() {
   const queryClient = useQueryClient()
@@ -286,11 +281,6 @@ export default function Settings() {
     shopify_access_token: '',
     shopify_blog_id: '',
   })
-  const [wordpressSettings, setWordpressSettings] = useState<WordPressSettings>({
-    wordpress_site_url: '',
-    wordpress_username: '',
-    wordpress_api_token: '',
-  })
 
   const { data: settings } = useQuery({
     queryKey: ['settings'],
@@ -310,15 +300,6 @@ export default function Settings() {
         shopify_blog_id: blogId,
       })
 
-      const siteUrl = settings.find(s => s.key === 'wordpress_site_url')?.value || ''
-      const username = settings.find(s => s.key === 'wordpress_username')?.value || ''
-      const apiToken = settings.find(s => s.key === 'wordpress_api_token')?.value || ''
-      
-      setWordpressSettings({
-        wordpress_site_url: siteUrl,
-        wordpress_username: username,
-        wordpress_api_token: apiToken,
-      })
     }
   }, [settings])
 
@@ -353,28 +334,6 @@ export default function Settings() {
     )
   }
 
-  const handleWordPressSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // 3つの設定を保存
-    updateMutation.mutate(
-      { key: 'wordpress_site_url', value: wordpressSettings.wordpress_site_url },
-      {
-        onSuccess: () => {
-          updateMutation.mutate(
-            { key: 'wordpress_username', value: wordpressSettings.wordpress_username },
-            {
-              onSuccess: () => {
-                updateMutation.mutate(
-                  { key: 'wordpress_api_token', value: wordpressSettings.wordpress_api_token }
-                )
-              },
-            }
-          )
-        },
-      }
-    )
-  }
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -441,85 +400,6 @@ export default function Settings() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
           >
             {updateMutation.isPending ? '保存中...' : 'Shopify設定を保存'}
-          </button>
-        </form>
-      </div>
-
-      {/* WordPress設定セクション */}
-      <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">WordPress設定</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          記事をWordPress.comに投稿するために、以下の情報を設定してください。
-        </p>
-        <form onSubmit={handleWordPressSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              WordPress.comサイトURL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="url"
-              required
-              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={wordpressSettings.wordpress_site_url}
-              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_site_url: e.target.value })}
-              placeholder="例: https://your-site.com/wp-json/wp/v2/posts"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              WordPress REST APIの完全なエンドポイントURL（例: https://your-site.com/wp-json/wp/v2/posts）
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ユーザー名 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={wordpressSettings.wordpress_username}
-              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_username: e.target.value })}
-              placeholder="WordPress.comユーザー名"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              WordPress.comのユーザー名（メールアドレス）
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              アプリケーションパスワード <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="password"
-              required
-              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              value={wordpressSettings.wordpress_api_token}
-              onChange={(e) => setWordpressSettings({ ...wordpressSettings, wordpress_api_token: e.target.value })}
-              placeholder="WordPress.com アプリケーションパスワード"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              WordPress.comのアプリケーションパスワードを取得してください。<br />
-              <span className="font-semibold text-red-600">重要: アプリケーションパスワードを表示するには、2段階認証を有効にする必要があります。</span><br />
-              <br />
-              <strong>手順:</strong><br />
-              1. <a href="https://wordpress.com/me/security" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                WordPress.com セキュリティ設定
-              </a> にアクセス<br />
-              2. 「2段階認証」を有効化（認証アプリまたはSMSを使用）<br />
-              3. 2段階認証を有効化すると、「アプリケーションパスワード」セクションが表示されます<br />
-              4. 「新しいアプリケーションパスワード名」に任意の名前を入力し、「追加する」をクリック<br />
-              5. 生成されたパスワードをコピーして保存（後で確認できません）<br />
-              <br />
-              <a href="https://wordpress.com/ja/support/security/two-step-authentication/application-specific-passwords/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                詳細な手順はこちら
-              </a>
-            </p>
-          </div>
-          <button
-            type="submit"
-            disabled={updateMutation.isPending}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
-          >
-            {updateMutation.isPending ? '保存中...' : 'WordPress設定を保存'}
           </button>
         </form>
       </div>

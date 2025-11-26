@@ -41,16 +41,6 @@ export default function ArticleDetail() {
     },
   })
 
-  const publishWordPressMutation = useMutation({
-    mutationFn: () => articlesApi.publishToWordPress(id!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['article', id] })
-      alert('WordPressに投稿しました')
-    },
-    onError: (error: any) => {
-      alert(`WordPress投稿エラー: ${error.response?.data?.detail || error.message}`)
-    },
-  })
 
   if (isLoading) {
     return <div className="text-center py-12">読み込み中...</div>
@@ -146,13 +136,6 @@ export default function ArticleDetail() {
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
                 >
                   {publishMutation.isPending ? '投稿中...' : 'Shopifyに投稿'}
-                </button>
-                <button
-                  onClick={() => publishWordPressMutation.mutate()}
-                  disabled={publishWordPressMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
-                >
-                  {publishWordPressMutation.isPending ? '投稿中...' : 'WordPressに投稿'}
                 </button>
               </>
             )}
