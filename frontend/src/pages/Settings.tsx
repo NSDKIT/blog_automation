@@ -498,9 +498,20 @@ export default function Settings() {
             />
             <p className="mt-1 text-xs text-gray-500">
               WordPress.comのアプリケーションパスワードを取得してください。<br />
-              <a href="https://wordpress.com/me/security" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+              <span className="font-semibold text-red-600">重要: アプリケーションパスワードを表示するには、2段階認証を有効にする必要があります。</span><br />
+              <br />
+              <strong>手順:</strong><br />
+              1. <a href="https://wordpress.com/me/security" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                 WordPress.com セキュリティ設定
-              </a> から「アプリケーションパスワード」を発行してください。
+              </a> にアクセス<br />
+              2. 「2段階認証」を有効化（認証アプリまたはSMSを使用）<br />
+              3. 2段階認証を有効化すると、「アプリケーションパスワード」セクションが表示されます<br />
+              4. 「新しいアプリケーションパスワード名」に任意の名前を入力し、「追加する」をクリック<br />
+              5. 生成されたパスワードをコピーして保存（後で確認できません）<br />
+              <br />
+              <a href="https://wordpress.com/ja/support/security/two-step-authentication/application-specific-passwords/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                詳細な手順はこちら
+              </a>
             </p>
           </div>
           <button

@@ -128,39 +128,35 @@ async def upload_image_to_wordpress(
         else:
             mime_type = "image/jpeg"
     
-    # WordPress.com API v1.1
-    # サイトIDは完全なドメイン名（例: example.wordpress.com）
-    site_domain = config['site_url'].replace("https://", "").replace("http://", "").strip()
-    api_url = f"https://public-api.wordpress.com/rest/v1.1/sites/{site_domain}/media/new"
+    # WordPress REST API v2エンドポイントを使用（提供されたコードの方式に従う）
+    api_url = f"{config['site_url'].rstrip('/')}/wp-json/wp/v2/media"
     
-    # WordPress.com APIはBasic認証を使用（ユーザー名:アプリケーションパスワード）
-    # アプリケーションパスワードはWordPress.comのセキュリティ設定から発行
-    credentials = f"{config['username']}:{config['api_token']}"
-    auth_base64_bytes = base64.b64encode(credentials.encode(encoding='utf-8'))
+    # Basic認証（提供されたコードの方式に従う）
+    auth_str = f"{config['username']}:{config['api_token']}"
+    auth_base64_bytes = base64.b64encode(auth_str.encode(encoding='utf-8'))
     auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
     
+    # ヘッダー設定（提供されたコードの方式に従う）
     headers = {
-        'Authorization': f'Basic {auth_base64}',
-    }
-    # WordPress.com APIはmultipart/form-dataを使用
-    files = {
-        'media[]': (image_filename, image_data, mime_type)
+        'Authorization': 'Basic ' + auth_base64,
+        'Content-Type': mime_type,
+        'Content-Disposition': f'attachiment; filename={image_filename}'  # 提供コードのtypoに合わせる
     }
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # WordPress.com APIはmultipart/form-dataを使用
+            # 画像データを直接送信（提供されたコードの方式に従う）
             response = await client.post(
                 api_url,
-                files=files,
+                content=image_data,
                 headers=headers
             )
             
-            # WordPress.com APIのレスポンス形式を処理
-            result = _check_response(response, 200)  # WordPress.comは200を返す
-            # WordPress.com APIのレスポンス形式: {"media": [{"ID": 123, ...}]}
-            if result.get("media") and len(result["media"]) > 0:
-                return result["media"][0].get("ID")
+            # レスポンスをチェック（201 Createdが成功）
+            result = _check_response(response, 201)
+            
+            if result.get("id"):
+                return result["id"]
             return None
     except WordPressError:
         raise
@@ -206,47 +202,49 @@ async def publish_article_to_wordpress(
     if not config:
         raise ValueError("WordPress設定が完了していません。設定ページでWordPress情報を登録してください。")
     
-    # WordPress.com API v1.1
-    # サイトIDは完全なドメイン名（例: example.wordpress.com）
-    site_domain = config['site_url'].replace("https://", "").replace("http://", "").strip()
-    api_url = f"https://public-api.wordpress.com/rest/v1.1/sites/{site_domain}/posts/new"
+    # WordPress REST API v2エンドポイントを使用（提供されたコードの方式に従う）
+    api_url = f"{config['site_url'].rstrip('/')}/wp-json/wp/v2/posts"
     
-    # WordPress.com APIはBasic認証を使用（ユーザー名:アプリケーションパスワード）
-    # アプリケーションパスワードはWordPress.comのセキュリティ設定から発行
-    credentials = f"{config['username']}:{config['api_token']}"
-    auth_base64_bytes = base64.b64encode(credentials.encode(encoding='utf-8'))
+    # Basic認証（提供されたコードの方式に従う）
+    auth_str = f"{config['username']}:{config['api_token']}"
+    auth_base64_bytes = base64.b64encode(auth_str.encode(encoding='utf-8'))
     auth_base64 = auth_base64_bytes.decode(encoding='utf-8')
     
     headers = {
-        'Authorization': f'Basic {auth_base64}',
+        'Authorization': 'Basic ' + auth_base64,
         'Content-Type': 'application/json'
     }
     
-    # WordPress.com APIの形式に合わせる
-    wp_com_data = {
+    # 記事データを準備（提供されたコードの方式に従う）
+    post_data = {
         'title': title,
         'content': content,
+        'format': 'standard',
         'status': status,
         'comment_status': comment_status,
     }
+    
     if slug:
-        wp_com_data['slug'] = slug
+        post_data['slug'] = slug
+    
     if featured_media_id:
-        wp_com_data['featured_image'] = featured_media_id
+        post_data['featured_media'] = featured_media_id
+    
     if category_ids:
-        wp_com_data['categories'] = category_ids
+        post_data['categories'] = category_ids
+    
     if tag_ids:
-        wp_com_data['tags'] = tag_ids
+        post_data['tags'] = tag_ids
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(api_url, json=wp_com_data, headers=headers)
+            response = await client.post(api_url, json=post_data, headers=headers)
             
-            # WordPress.com APIのレスポンス形式を処理
-            result = _check_response(response, 200)  # WordPress.comは200を返す
-            # WordPress.com APIのレスポンス形式: {"ID": 123, ...}
-            if result.get("ID"):
-                return result["ID"]
+            # レスポンスをチェック（201 Createdが成功）
+            result = _check_response(response, 201)
+            
+            if result.get("id"):
+                return result["id"]
             return None
     except WordPressError:
         raise
