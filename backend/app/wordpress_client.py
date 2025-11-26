@@ -86,7 +86,8 @@ def _check_response(response: httpx.Response, success_code: int) -> Dict:
             )
         )
     
-    if response.status_code != success_code:
+    # 200と201の両方を成功として扱う（WordPress REST API v2は場合によって200を返す）
+    if response.status_code not in [200, 201] and response.status_code != success_code:
         # JSON解析に失敗した場合（HTMLレスポンスなど）の処理
         if isinstance(json_object, dict):
             error_message = json_object.get('message', response.text[:500])
@@ -191,11 +192,16 @@ async def upload_image_to_wordpress(
                 headers=headers
             )
             
-            # レスポンスをチェック（201 Createdが成功）
-            result = _check_response(response, 201)
-            
-            if result.get("id"):
-                return result["id"]
+            # レスポンスをチェック（200 OKまたは201 Createdが成功）
+            # WordPress REST API v2は場合によって200を返すこともある
+            if response.status_code in [200, 201]:
+                result = response.json()
+                if result.get("id"):
+                    return result["id"]
+            else:
+                result = _check_response(response, 201)
+                if result.get("id"):
+                    return result["id"]
             return None
     except WordPressError:
         raise
@@ -279,11 +285,27 @@ async def publish_article_to_wordpress(
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.post(api_url, json=post_data, headers=headers)
             
-            # レスポンスをチェック（201 Createdが成功）
-            result = _check_response(response, 201)
-            
-            if result.get("id"):
-                return result["id"]
+            # レスポンスをチェック（200 OKまたは201 Createdが成功）
+            # WordPress REST API v2は場合によって200を返すこともある
+            if response.status_code in [200, 201]:
+                try:
+                    result = response.json()
+                    # レスポンスが配列の場合（WordPress REST API v2の一部のエンドポイント）
+                    if isinstance(result, list) and len(result) > 0:
+                        result = result[0]
+                    if result.get("id"):
+                        return result["id"]
+                except (ValueError, json.JSONDecodeError):
+                    # JSON解析に失敗した場合、エラーメッセージを返す
+                    raise WordPressError(
+                        response.status_code,
+                        response.reason_phrase or "Unknown",
+                        f"JSON解析エラー: レスポンスがJSON形式ではありません。レスポンス: {response.text[:200]}"
+                    )
+            else:
+                result = _check_response(response, 201)
+                if result.get("id"):
+                    return result["id"]
             return None
     except WordPressError:
         raise
