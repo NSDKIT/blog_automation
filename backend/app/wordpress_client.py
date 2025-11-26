@@ -53,17 +53,55 @@ def _check_response(response: httpx.Response, success_code: int) -> Dict:
     Raises:
         WordPressError: エラーが発生した場合
     """
+    # リダイレクトエラーの場合、JSON解析を試みる前にエラーを返す
+    if response.status_code == 301 or response.status_code == 302:
+        location = response.headers.get('Location', '不明')
+        raise WordPressError(
+            response.status_code,
+            response.reason_phrase or "Redirect",
+            (
+                f"リダイレクトエラー: WordPress.comのサイトURLが正しくない可能性があります。\n"
+                f"確認事項:\n"
+                f"1. サイトURLが正しいか確認してください（例: https://example.wordpress.com）\n"
+                f"2. URLに末尾のスラッシュ（/）が含まれていないか確認してください\n"
+                f"3. WordPress.comのサイトが存在するか確認してください\n"
+                f"4. リダイレクト先: {location}\n"
+                f"5. WordPress.comでは `/wp-json/wp/v2/` エンドポイントが使えない可能性があります"
+            )
+        )
+    
     try:
         json_object = response.json()
     except (ValueError, json.JSONDecodeError) as ex:
+        # JSON解析に失敗した場合、レスポンスの内容を確認
+        content_preview = response.text[:200] if response.text else "空のレスポンス"
         raise WordPressError(
             response.status_code,
             response.reason_phrase or "Unknown",
-            f"JSON解析エラー: {str(ex)}"
+            (
+                f"JSON解析エラー: {str(ex)}\n"
+                f"レスポンスの内容（最初の200文字）: {content_preview}\n"
+                f"これは、WordPress.comのサイトURLが正しくないか、"
+                f"`/wp-json/wp/v2/` エンドポイントが使用できない可能性があります。"
+            )
         )
     
     if response.status_code != success_code:
-        error_message = json_object.get('message', response.text[:500]) if isinstance(json_object, dict) else response.text[:500]
+        # JSON解析に失敗した場合（HTMLレスポンスなど）の処理
+        if isinstance(json_object, dict):
+            error_message = json_object.get('message', response.text[:500])
+        else:
+            # HTMLレスポンスの場合、最初の500文字を表示
+            error_message = response.text[:500]
+            if response.status_code == 301 or response.status_code == 302:
+                error_message = (
+                    f"リダイレクトエラー ({response.status_code}): WordPress.comのサイトURLが正しくない可能性があります。\n"
+                    f"確認事項:\n"
+                    f"1. サイトURLが正しいか確認してください（例: https://example.wordpress.com）\n"
+                    f"2. URLに末尾のスラッシュ（/）が含まれていないか確認してください\n"
+                    f"3. WordPress.comのサイトが存在するか確認してください\n"
+                    f"4. リダイレクト先: {response.headers.get('Location', '不明')}"
+                )
         
         # 403エラーの場合、より詳細なメッセージを追加
         if response.status_code == 403:
@@ -72,7 +110,8 @@ def _check_response(response: httpx.Response, success_code: int) -> Dict:
                 "1. WordPress.comのユーザー名（メールアドレス）が正しいか確認してください\n"
                 "2. アプリケーションパスワードが正しく発行されているか確認してください\n"
                 "3. アプリケーションパスワードにスペースが含まれている場合は、そのまま入力してください\n"
-                "4. WordPress.comのセキュリティ設定（https://wordpress.com/me/security）でアプリケーションパスワードが有効か確認してください"
+                "4. WordPress.comのセキュリティ設定（https://wordpress.com/me/security）でアプリケーションパスワードが有効か確認してください\n"
+                "5. 2段階認証が有効になっているか確認してください（アプリケーションパスワードを表示するには2段階認証が必要です）"
             )
         
         raise WordPressError(
@@ -144,7 +183,7 @@ async def upload_image_to_wordpress(
     }
     
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             # 画像データを直接送信（提供されたコードの方式に従う）
             response = await client.post(
                 api_url,
@@ -237,7 +276,7 @@ async def publish_article_to_wordpress(
         post_data['tags'] = tag_ids
     
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.post(api_url, json=post_data, headers=headers)
             
             # レスポンスをチェック（201 Createdが成功）
