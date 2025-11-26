@@ -295,14 +295,25 @@ async def publish_article_to_wordpress_endpoint(
             slug = re.sub(r'[-\s]+', '-', slug)
         
         # WordPressに投稿（提供コードと同じ形式）
-        wordpress_article_id = await publish_article_to_wordpress(
-            user_id=user_id,
-            title=title,
-            content=content,
-            slug=slug,
-            featured_media_id=featured_media_id,
-            status="draft"  # 提供コードと同じデフォルト値
-        )
+        try:
+            wordpress_article_id = await publish_article_to_wordpress(
+                user_id=user_id,
+                title=title,
+                content=content,
+                slug=slug,
+                featured_media_id=featured_media_id,
+                status="draft"  # 提供コードと同じデフォルト値
+            )
+        except WordPressError as wp_error:
+            # WordPressエラーをそのまま再発生させる
+            raise wp_error
+        
+        # wordpress_article_idがNoneの場合はエラー
+        if not wordpress_article_id:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="WordPressへの投稿に失敗しました（記事IDが取得できませんでした）"
+            )
         
         if wordpress_article_id:
             # 記事を更新（statusをpublishedに更新）

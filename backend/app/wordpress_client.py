@@ -304,38 +304,46 @@ async def publish_article_to_wordpress(
             # デバッグ: レスポンス情報をログに記録
             print(f"[WordPress投稿] ステータスコード: {response.status_code}")
             print(f"[WordPress投稿] レスポンスヘッダー: {dict(response.headers)}")
-            print(f"[WordPress投稿] レスポンス本文（最初の500文字）: {response.text[:500]}")
+            print(f"[WordPress投稿] レスポンス本文（全内容）: {response.text}")
             
             # レスポンスをチェック（200 OKまたは201 Createdが成功）
             # WordPress REST API v2は場合によって200を返すこともある
             if response.status_code in [200, 201]:
                 try:
                     result = response.json()
-                    print(f"[WordPress投稿] パースされたJSON: {json.dumps(result, ensure_ascii=False)[:500]}")
+                    print(f"[WordPress投稿] パースされたJSON: {json.dumps(result, ensure_ascii=False)}")
                     
                     # レスポンスが配列の場合（WordPress REST API v2の一部のエンドポイント）
                     if isinstance(result, list) and len(result) > 0:
                         result = result[0]
-                        print(f"[WordPress投稿] 配列から最初の要素を取得: {json.dumps(result, ensure_ascii=False)[:500]}")
+                        print(f"[WordPress投稿] 配列から最初の要素を取得: {json.dumps(result, ensure_ascii=False)}")
                     
-                    # idフィールドを確認
+                    # エラーレスポンスのチェック（WordPress APIはエラーでも200を返すことがある）
+                    if isinstance(result, dict) and result.get("code"):
+                        # エラーレスポンスの場合
+                        error_code = result.get("code", "unknown")
+                        error_message = result.get("message", "Unknown error")
+                        error_data = result.get("data", {})
+                        error_status = error_data.get("status", response.status_code)
+                        raise WordPressError(
+                            error_status,
+                            error_code,
+                            f"WordPress API エラー: {error_message} (code: {error_code})"
+                        )
+                    
+                    # idフィールドを確認（提供コードではres.json()["id"]を確認）
                     article_id = result.get("id")
                     print(f"[WordPress投稿] 取得した記事ID: {article_id}")
+                    print(f"[WordPress投稿] レスポンス全体: {json.dumps(result, ensure_ascii=False, indent=2)}")
                     
                     if article_id:
                         # 正常に記事IDを取得できた
                         print(f"[WordPress投稿] 成功: 記事ID {article_id} を返します")
                         return int(article_id)  # 整数として返す
                     else:
-                        # idが存在しない場合でも、レスポンスにstatusやlinkがあれば投稿は成功している可能性が高い
-                        # この場合は、レスポンス全体をログに記録してエラーを返す
-                        # ただし、実際にWordPressに投稿されている可能性があることを示す
+                        # idが存在しない場合はエラー（提供コードではidを確認していないが、エラーチェックが必要）
                         error_msg = f"WordPress APIレスポンスに記事IDが含まれていません。"
-                        if result.get("status"):
-                            error_msg += f" status='{result.get('status')}'"
-                        if result.get("link"):
-                            error_msg += f" link='{result.get('link')}'"
-                        error_msg += f" レスポンス: {json.dumps(result, ensure_ascii=False)[:500]}"
+                        error_msg += f"\nレスポンス: {json.dumps(result, ensure_ascii=False, indent=2)}"
                         print(f"[WordPress投稿] エラー: {error_msg}")
                         raise WordPressError(
                             response.status_code,
@@ -344,7 +352,7 @@ async def publish_article_to_wordpress(
                         )
                 except (ValueError, json.JSONDecodeError) as e:
                     # JSON解析に失敗した場合、エラーメッセージを返す
-                    error_msg = f"JSON解析エラー: {str(e)}。レスポンス: {response.text[:500]}"
+                    error_msg = f"JSON解析エラー: {str(e)}。レスポンス: {response.text}"
                     print(f"[WordPress投稿] JSON解析エラー: {error_msg}")
                     raise WordPressError(
                         response.status_code,
@@ -360,6 +368,14 @@ async def publish_article_to_wordpress(
             return None
     except WordPressError:
         raise
+    except httpx.HTTPStatusError as e:
+        # HTTPエラー（4xx, 5xx）の場合
+        error_text = e.response.text[:500] if e.response else "レスポンスなし"
+        raise WordPressError(
+            e.response.status_code if e.response else 0,
+            e.response.reason_phrase if e.response else "HTTP Error",
+            f"WordPress API HTTPエラー: {error_text}"
+        )
     except httpx.RequestError as e:
         raise WordPressError(0, "Request Error", f"WordPress API リクエストエラー: {str(e)}")
     except Exception as e:
