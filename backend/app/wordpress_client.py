@@ -278,9 +278,9 @@ async def publish_article_to_wordpress(
     if tag_ids:
         post_data['tags'] = tag_ids
     
-    # ヘッダー設定（Content-Typeのみ、認証はauthパラメータで自動設定）
+    # ヘッダー設定（提供されたコードの方式に従う）
     headers = {
-        'Content-Type': 'application/json'
+        'Content-type': 'application/json'
     }
     
     try:
@@ -289,10 +289,10 @@ async def publish_article_to_wordpress(
             print(f"[WordPress投稿] API URL: {api_url}")
             print(f"[WordPress投稿] リクエストデータ: {json.dumps(post_data, ensure_ascii=False)[:200]}")
             
-            # authパラメータを使用してBasic認証を自動設定（提供されたコードの方式に従う）
+            # 提供されたコードの方式に従う: data=json.dumps(payload) を使用
             response = await client.post(
                 api_url,
-                json=post_data,
+                data=json.dumps(post_data),
                 headers=headers,
                 auth=(config['username'], config['api_token'])
             )
