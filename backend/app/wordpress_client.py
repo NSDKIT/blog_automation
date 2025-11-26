@@ -18,8 +18,15 @@ def get_wordpress_config(user_id: str) -> Optional[Dict[str, str]]:
     if not wp_url or not wp_user or not wp_pass:
         return None
     
+    # URLにhttps://またはhttp://が含まれていない場合は自動的にhttps://を追加
+    base_url = wp_url.strip()
+    if not base_url.startswith(('http://', 'https://')):
+        base_url = f"https://{base_url}"
+    
+    # 末尾のスラッシュを削除
+    base_url = base_url.rstrip('/')
+    
     # URLに/wp-json/wp/v2/postsが含まれていない場合は自動的に追加
-    base_url = wp_url.rstrip('/')
     if '/wp-json/wp/v2/posts' not in base_url:
         api_url = f"{base_url}/wp-json/wp/v2/posts"
     else:
