@@ -158,7 +158,7 @@ export default function KeywordSelection() {
           <div className="border-t pt-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">進捗状況</h2>
             <div className="space-y-3">
-              {steps.map((step, index) => (
+              {steps.map((step) => (
                 <div
                   key={step.key}
                   className={`flex items-center p-3 rounded-lg border ${
