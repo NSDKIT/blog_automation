@@ -70,15 +70,36 @@ async def create_article_endpoint(
         changes={"keyword": article_data.keyword, "target": article_data.target}
     )
     
-    # バックグラウンドでキーワード分析を開始
+    # バックグラウンドでキーワード分析を開始（別スレッドで実行して確実に実行されるように）
     from app.tasks import analyze_keywords_task
     import traceback
+    import threading
+    
     print(f"[create_article_endpoint] キーワード分析タスクを開始: article_id={article.get('id')}, status={article.get('status')}")
     
     # 記事のステータスを確認
     article_check = get_article_by_id(article.get("id"), str(current_user.get("id")))
     print(f"[create_article_endpoint] 記事確認: status={article_check.get('status') if article_check else 'None'}")
     
+    # 別スレッドで実行（確実に実行されるように）
+    def run_analyze_task():
+        try:
+            print(f"[create_article_endpoint] 別スレッドでキーワード分析タスクを開始")
+            analyze_keywords_task(
+                article_id=article.get("id"),
+                article_data=article_data.dict(),
+                user_id=str(current_user.get("id"))
+            )
+        except Exception as e:
+            print(f"[create_article_endpoint] 別スレッドでのタスク実行エラー: {str(e)}")
+            print(f"[create_article_endpoint] トレースバック:\n{traceback.format_exc()}")
+    
+    # 別スレッドで実行（非同期、daemon=Trueでメインスレッド終了時に自動終了）
+    thread = threading.Thread(target=run_analyze_task, daemon=True)
+    thread.start()
+    print(f"[create_article_endpoint] 別スレッドでキーワード分析タスクを開始しました（スレッドID: {thread.ident}）")
+    
+    # FastAPIのBackgroundTasksにも追加（念のため）
     try:
         background_tasks.add_task(
             analyze_keywords_task,
@@ -86,12 +107,11 @@ async def create_article_endpoint(
             article_data=article_data.dict(),
             user_id=str(current_user.get("id"))
         )
-        print(f"[create_article_endpoint] キーワード分析タスクを追加しました")
+        print(f"[create_article_endpoint] キーワード分析タスクをBackgroundTasksにも追加しました")
     except Exception as e:
-        print(f"[create_article_endpoint] タスク追加エラー: {str(e)}")
+        print(f"[create_article_endpoint] BackgroundTasks追加エラー: {str(e)}")
         print(f"[create_article_endpoint] トレースバック:\n{traceback.format_exc()}")
-        # エラーが発生した場合でも、ステータスはkeyword_analysisのまま
-        # ユーザーにはエラーが表示される
+        # エラーが発生した場合でも、別スレッドで実行されているので問題なし
     create_audit_log(
         user_id=str(current_user.get("id")),
         action="article_created",

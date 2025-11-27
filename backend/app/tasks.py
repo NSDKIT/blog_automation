@@ -148,6 +148,16 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         
         print(f"[analyze_keywords_task] 記事を取得: status={article.get('status')}, keyword={article.get('keyword')}")
         
+        # 既にキーワード分析が完了している場合はスキップ
+        if article.get("status") == "keyword_selection":
+            print(f"[analyze_keywords_task] 既にキーワード分析が完了しています。スキップします。")
+            return
+        
+        # keyword_analysis以外のステータスの場合はスキップ（既に処理済み）
+        if article.get("status") != "keyword_analysis":
+            print(f"[analyze_keywords_task] ステータスがkeyword_analysisではありません。現在のステータス: {article.get('status')}。スキップします。")
+            return
+        
         # OpenAIクライアントを取得
         from app.workflow import ArticleGenerator
         generator = ArticleGenerator(user_id=user_id)
