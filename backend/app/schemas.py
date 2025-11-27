@@ -83,6 +83,7 @@ class ArticleResponse(BaseModel):
     analyzed_keywords: Optional[List[Dict]] = None  # 分析済みキーワードリスト（全100個）
     selected_keywords: Optional[List[str]] = None  # ユーザーが選択したキーワード
     selected_keywords_data: Optional[List[Dict]] = None  # 選択されたキーワードの詳細データ
+    keyword_analysis_progress: Optional[Dict] = None  # キーワード分析の進捗状況
 
     class Config:
         from_attributes = True

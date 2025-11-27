@@ -32,6 +32,14 @@ export interface Article {
   analyzed_keywords?: any  // 分析済みキーワードリスト（全100個）
   selected_keywords?: string[] | null  // ユーザーが選択したキーワード
   selected_keywords_data?: any  // 選択されたキーワードの詳細データ
+  keyword_analysis_progress?: {
+    status_check?: boolean
+    openai_generation?: boolean
+    dataforseo_fetch?: boolean
+    scoring_completed?: boolean
+    current_step?: string
+    error_message?: string | null
+  } | null  // キーワード分析の進捗状況
 }
 
 export interface ArticleCreate {
