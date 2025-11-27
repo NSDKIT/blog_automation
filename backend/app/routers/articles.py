@@ -72,14 +72,26 @@ async def create_article_endpoint(
     
     # バックグラウンドでキーワード分析を開始
     from app.tasks import analyze_keywords_task
-    print(f"[create_article_endpoint] キーワード分析タスクを開始: article_id={article.get('id')}")
-    background_tasks.add_task(
-        analyze_keywords_task,
-        article_id=article.get("id"),
-        article_data=article_data.dict(),
-        user_id=str(current_user.get("id"))
-    )
-    print(f"[create_article_endpoint] キーワード分析タスクを追加しました")
+    import traceback
+    print(f"[create_article_endpoint] キーワード分析タスクを開始: article_id={article.get('id')}, status={article.get('status')}")
+    
+    # 記事のステータスを確認
+    article_check = get_article_by_id(article.get("id"), str(current_user.get("id")))
+    print(f"[create_article_endpoint] 記事確認: status={article_check.get('status') if article_check else 'None'}")
+    
+    try:
+        background_tasks.add_task(
+            analyze_keywords_task,
+            article_id=article.get("id"),
+            article_data=article_data.dict(),
+            user_id=str(current_user.get("id"))
+        )
+        print(f"[create_article_endpoint] キーワード分析タスクを追加しました")
+    except Exception as e:
+        print(f"[create_article_endpoint] タスク追加エラー: {str(e)}")
+        print(f"[create_article_endpoint] トレースバック:\n{traceback.format_exc()}")
+        # エラーが発生した場合でも、ステータスはkeyword_analysisのまま
+        # ユーザーにはエラーが表示される
     create_audit_log(
         user_id=str(current_user.get("id")),
         action="article_created",

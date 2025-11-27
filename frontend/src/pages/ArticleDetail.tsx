@@ -20,8 +20,10 @@ export default function ArticleDetail() {
     enabled: !!id,
     refetchInterval: (query) => {
       const article = query.state.data
-      // キーワード分析中またはキーワード選択待ちの場合はポーリング
-      if (article?.status === 'keyword_analysis' || article?.status === 'keyword_selection') {
+      // キーワード分析中、キーワード選択待ち、または記事生成中の場合はポーリング
+      if (article?.status === 'keyword_analysis' || 
+          article?.status === 'keyword_selection' || 
+          article?.status === 'processing') {
         return 2000 // 2秒ごとにポーリング
       }
       return false
@@ -432,7 +434,31 @@ export default function ArticleDetail() {
             />
           ) : (
             <div className="text-center py-12 text-gray-500">
-              {article.status === 'processing' ? '記事を生成中です...' : '記事内容がありません'}
+              {article.status === 'processing' ? (
+                <div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">記事を生成中です...</p>
+                  <p className="text-sm text-gray-500 mt-2">この処理には数分かかることがあります</p>
+                </div>
+              ) : article.status === 'keyword_analysis' ? (
+                <div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">キーワード分析中</p>
+                  <p className="text-sm text-gray-500 mt-2">関連キーワード100個を生成し、検索ボリューム・競合度を分析しています...</p>
+                </div>
+              ) : article.status === 'keyword_selection' ? (
+                <div>
+                  <p className="text-gray-600">キーワード選択が必要です</p>
+                  <button
+                    onClick={() => navigate(`/articles/${id}/keywords`)}
+                    className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md text-sm font-medium"
+                  >
+                    キーワードを選択する
+                  </button>
+                </div>
+              ) : (
+                '記事内容がありません'
+              )}
             </div>
           )}
         </div>
