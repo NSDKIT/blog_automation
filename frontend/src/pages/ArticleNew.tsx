@@ -17,6 +17,10 @@ export default function ArticleNew() {
     important_keyword1: '',
     important_keyword2: '',
     important_keyword3: '',
+    search_intent: '情報収集',
+    target_location: 'Japan',
+    device_type: 'mobile',
+    secondary_keywords: [],
   })
 
   // 登録された選択肢を取得
@@ -234,6 +238,77 @@ export default function ArticleNew() {
               設定画面で選択肢を登録してください
             </p>
           )}
+
+          {/* SEO関連設定 */}
+          <div className="border-t pt-6 mt-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">SEO設定</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  検索意図
+                </label>
+                <select
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={formData.search_intent}
+                  onChange={(e) => setFormData({ ...formData, search_intent: e.target.value })}
+                >
+                  <option value="情報収集">情報収集</option>
+                  <option value="購買検討">購買検討</option>
+                  <option value="比較検討">比較検討</option>
+                  <option value="問題解決">問題解決</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  検索地域
+                </label>
+                <select
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={formData.target_location}
+                  onChange={(e) => setFormData({ ...formData, target_location: e.target.value })}
+                >
+                  <option value="Japan">日本</option>
+                  <option value="Tokyo">東京</option>
+                  <option value="Osaka">大阪</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  デバイスタイプ
+                </label>
+                <select
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={formData.device_type}
+                  onChange={(e) => setFormData({ ...formData, device_type: e.target.value })}
+                >
+                  <option value="mobile">モバイル</option>
+                  <option value="desktop">デスクトップ</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">
+                サブキーワード（カンマ区切り）
+              </label>
+              <input
+                type="text"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="キーワード1, キーワード2, キーワード3"
+                value={formData.secondary_keywords?.join(', ') || ''}
+                onChange={(e) => {
+                  const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k)
+                  setFormData({ ...formData, secondary_keywords: keywords })
+                }}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                メインキーワード以外の関連キーワードを入力してください
+              </p>
+            </div>
+          </div>
 
           <div className="flex justify-end">
             <button

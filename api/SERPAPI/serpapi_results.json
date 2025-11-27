@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"desktop\", \"os\": \"windows\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-efeedfdf729f\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"google\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"google\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"desktop\",\n                \"os\": \"windows\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-4.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  },
+  {
+    "url": "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"desktop\", \"os\": \"macos\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-32b13b268f38\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"google\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"google\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"desktop\",\n                \"os\": \"macos\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-1.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  },
+  {
+    "url": "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"mobile\", \"os\": \"android\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-a6969bb9d23c\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"google\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"google\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"mobile\",\n                \"os\": \"android\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-2.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  },
+  {
+    "url": "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"mobile\", \"os\": \"ios\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-ff8235e4f972\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"google\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"google\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"mobile\",\n                \"os\": \"ios\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-3.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  },
+  {
+    "url": "https://api.dataforseo.com/v3/serp/bing/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"desktop\", \"os\": \"windows\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-dcc64098a2c8\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"bing\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"bing\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"desktop\",\n                \"os\": \"windows\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-1.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  },
+  {
+    "url": "https://api.dataforseo.com/v3/serp/bing/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"desktop\", \"os\": \"macos\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-65565900a42b\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"bing\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"bing\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"desktop\",\n                \"os\": \"macos\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-2.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  },
+  {
+    "url": "https://api.dataforseo.com/v3/serp/bing/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"mobile\", \"os\": \"android\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-8c93cda65049\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"bing\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"bing\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"mobile\",\n                \"os\": \"android\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-1.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  },
+  {
+    "url": "https://api.dataforseo.com/v3/serp/bing/organic/live/advanced",
+    "payload": "[{\"keyword\": \"weather forecast\", \"location_code\": 2392, \"language_code\": \"ja\", \"device\": \"mobile\", \"os\": \"ios\", \"depth\": 100}]",
+    "headers": {
+      "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+      "Content-Type": "application/json"
+    },
+    "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0 sec.\",\n    \"cost\": 0,\n    \"tasks_count\": 1,\n    \"tasks_error\": 1,\n    \"tasks\": [\n        {\n            \"id\": \"11271814-1242-0139-0000-4c4a171f63b1\",\n            \"status_code\": 40200,\n            \"status_message\": \"Payment Required.\",\n            \"time\": \"0 sec.\",\n            \"cost\": 0,\n            \"result_count\": 0,\n            \"path\": [\n                \"v3\",\n                \"serp\",\n                \"bing\",\n                \"organic\",\n                \"live\",\n                \"advanced\"\n            ],\n            \"data\": {\n                \"api\": \"serp\",\n                \"function\": \"live\",\n                \"se\": \"bing\",\n                \"se_type\": \"organic\",\n                \"async\": \"true\",\n                \"keyword\": \"weather forecast\",\n                \"location_code\": 2392,\n                \"language_code\": \"ja\",\n                \"device\": \"mobile\",\n                \"os\": \"ios\",\n                \"depth\": 100,\n                \"api_postback_url\": \"https:\\/\\/lsd-2.iotechnologies.gdn:97\\/api\\/postback\"\n            },\n            \"result\": null\n        }\n    ]\n}"
+  }
+]

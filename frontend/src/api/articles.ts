@@ -12,6 +12,26 @@ export interface Article {
   status: string
   created_at: string
   updated_at: string
+  // SEO関連フィールド
+  meta_title?: string | null
+  meta_description?: string | null
+  search_intent?: string | null
+  target_location?: string | null
+  device_type?: string | null
+  serp_data?: any
+  serp_headings_analysis?: any
+  serp_common_patterns?: any
+  serp_faq_items?: string[] | null
+  keyword_volume_data?: any
+  related_keywords?: any
+  keyword_difficulty?: any
+  subtopics?: string[] | null
+  content_structure?: any
+  structured_data?: any
+  best_keywords?: any  // 最適なキーワードリスト（スコアリング済み）
+  analyzed_keywords?: any  // 分析済みキーワードリスト（全100個）
+  selected_keywords?: string[] | null  // ユーザーが選択したキーワード
+  selected_keywords_data?: any  // 選択されたキーワードの詳細データ
 }
 
 export interface ArticleCreate {
@@ -26,6 +46,11 @@ export interface ArticleCreate {
   important_keyword2?: string
   important_keyword3?: string
   sheet_id?: string  // 後方互換性のため残すが、使用しない
+  // SEO関連フィールド
+  search_intent?: string
+  target_location?: string
+  device_type?: string
+  secondary_keywords?: string[]
 }
 
 export interface ArticleUpdate {
@@ -60,6 +85,12 @@ export const articlesApi = {
   },
   publishToWordPress: async (id: string) => {
     const response = await apiClient.post(`/articles/${id}/publish-wordpress`)
+    return response.data
+  },
+  selectKeywords: async (id: string, selectedKeywords: string[]) => {
+    const response = await apiClient.post(`/articles/${id}/select-keywords`, {
+      selected_keywords: selectedKeywords
+    })
     return response.data
   },
 }

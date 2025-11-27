@@ -1,14 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from typing import List
 from uuid import UUID
+from pydantic import BaseModel
 import requests
 from app.supabase_db import (
     get_articles_by_user_id, get_article_by_id, create_article,
-    update_article, delete_article, create_article_history
+    update_article, delete_article, create_article_history, create_audit_log
 )
 from app.schemas import ArticleCreate, ArticleResponse, ArticleUpdate
 from app.dependencies import get_current_user
 from app.tasks import generate_article_task
+from app.rate_limit import rate_limit
+from app.sanitize import sanitize_html
+from app.utils import get_client_ip
 
 router = APIRouter()
 
@@ -39,10 +43,15 @@ async def get_article(
     return article
 
 
-@router.post("", response_model=ArticleResponse)
+@router.post(
+    "",
+    response_model=ArticleResponse,
+    dependencies=[Depends(rate_limit(limit=5, window_seconds=60))]
+)
 async def create_article_endpoint(
     article_data: ArticleCreate,
     background_tasks: BackgroundTasks,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     # 記事レコードを作成
@@ -51,7 +60,7 @@ async def create_article_endpoint(
         keyword=article_data.keyword,
         target=article_data.target,
         article_type=article_data.article_type,
-        status="processing"
+        status="keyword_analysis"  # キーワード分析待ちのステータス
     )
     
     # 履歴を記録
@@ -61,21 +70,33 @@ async def create_article_endpoint(
         changes={"keyword": article_data.keyword, "target": article_data.target}
     )
     
-    # バックグラウンドで記事生成を開始
+    # バックグラウンドでキーワード分析を開始
+    from app.tasks import analyze_keywords_task
     background_tasks.add_task(
-        generate_article_task,
+        analyze_keywords_task,
         article_id=article.get("id"),
         article_data=article_data.dict(),
         user_id=str(current_user.get("id"))
+    )
+    create_audit_log(
+        user_id=str(current_user.get("id")),
+        action="article_created",
+        metadata={"article_id": article.get("id"), "keyword": article_data.keyword},
+        ip_address=get_client_ip(request)
     )
     
     return article
 
 
-@router.put("/{article_id}", response_model=ArticleResponse)
+@router.put(
+    "/{article_id}",
+    response_model=ArticleResponse,
+    dependencies=[Depends(rate_limit(limit=20, window_seconds=60))]
+)
 async def update_article_endpoint(
     article_id: UUID,
     article_update: ArticleUpdate,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     # 既存の記事を取得
@@ -96,8 +117,9 @@ async def update_article_endpoint(
         updates["title"] = article_update.title
     
     if article_update.content is not None:
-        changes["content"] = {"old": existing_article.get("content"), "new": article_update.content}
-        updates["content"] = article_update.content
+        sanitized = sanitize_html(article_update.content)
+        changes["content"] = {"old": existing_article.get("content"), "new": sanitized}
+        updates["content"] = sanitized
     
     if article_update.status is not None:
         changes["status"] = {"old": existing_article.get("status"), "new": article_update.status}
@@ -119,13 +141,23 @@ async def update_article_endpoint(
             action="updated",
             changes=changes
         )
+        create_audit_log(
+            user_id=str(current_user.get("id")),
+            action="article_updated",
+            metadata={"article_id": str(article_id), "fields": list(changes.keys())},
+            ip_address=get_client_ip(request)
+        )
     
     return article
 
 
-@router.delete("/{article_id}")
+@router.delete(
+    "/{article_id}",
+    dependencies=[Depends(rate_limit(limit=20, window_seconds=60))]
+)
 async def delete_article_endpoint(
     article_id: UUID,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     # 既存の記事を確認
@@ -145,13 +177,23 @@ async def delete_article_endpoint(
     
     # 記事を削除
     delete_article(str(article_id), str(current_user.get("id")))
+    create_audit_log(
+        user_id=str(current_user.get("id")),
+        action="article_deleted",
+        metadata={"article_id": str(article_id)},
+        ip_address=get_client_ip(request)
+    )
     
     return {"message": "記事を削除しました"}
 
 
-@router.post("/{article_id}/publish")
+@router.post(
+    "/{article_id}/publish",
+    dependencies=[Depends(rate_limit(limit=10, window_seconds=300))]
+)
 async def publish_article_endpoint(
     article_id: UUID,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     from app.shopify_client import publish_article_to_shopify
@@ -208,6 +250,12 @@ async def publish_article_endpoint(
                 action="published",
                 changes={"shopify_article_id": shopify_article_id}
             )
+            create_audit_log(
+                user_id=user_id,
+                action="article_published_shopify",
+                metadata={"article_id": str(article_id), "shopify_article_id": shopify_article_id},
+                ip_address=get_client_ip(request)
+            )
             
             return {
                 "message": "記事をShopifyに投稿しました",
@@ -231,9 +279,109 @@ async def publish_article_endpoint(
         )
 
 
-@router.post("/{article_id}/publish-wordpress")
+class KeywordSelection(BaseModel):
+    selected_keywords: List[str]
+
+
+@router.post(
+    "/{article_id}/select-keywords",
+    dependencies=[Depends(rate_limit(limit=10, window_seconds=60))]
+)
+async def select_keywords_endpoint(
+    article_id: UUID,
+    keyword_selection: KeywordSelection,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    ユーザーが選択したキーワードで記事生成を開始
+    """
+    from app.supabase_db import get_article_by_id
+    from app.tasks import generate_article_task
+    from fastapi import BackgroundTasks
+    import json
+    
+    article = get_article_by_id(str(article_id), str(current_user.get("id")))
+    
+    if not article:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="記事が見つかりません"
+        )
+    
+    if article.get("status") != "keyword_selection":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="キーワード選択のステータスではありません"
+        )
+    
+    # 選択されたキーワードを保存
+    analyzed_keywords_json = article.get("analyzed_keywords")
+    if analyzed_keywords_json:
+        if isinstance(analyzed_keywords_json, str):
+            analyzed_keywords = json.loads(analyzed_keywords_json)
+        else:
+            analyzed_keywords = analyzed_keywords_json
+        
+        selected_keywords = keyword_selection.selected_keywords
+        
+        # 選択されたキーワードをフィルタリング
+        selected_keywords_data = [
+            kw for kw in analyzed_keywords 
+            if kw.get("keyword") in selected_keywords
+        ]
+        
+        # 記事データを取得（元の入力データ）
+        article_data = {
+            "keyword": article.get("keyword"),
+            "target": article.get("target"),
+            "article_type": article.get("article_type"),
+            "important_keyword1": None,
+            "important_keyword2": None,
+            "important_keyword3": None,
+            "secondary_keywords": selected_keywords  # 選択されたキーワードをセカンダリキーワードとして使用
+        }
+        
+        # 選択されたキーワードを保存
+        update_article(
+            str(article_id),
+            str(current_user.get("id")),
+            {
+                "status": "processing",
+                "selected_keywords": json.dumps(selected_keywords, ensure_ascii=False),
+                "selected_keywords_data": json.dumps(selected_keywords_data, ensure_ascii=False)
+            }
+        )
+        
+        # バックグラウンドで記事生成を開始
+        from app.tasks import generate_article_task
+        background_tasks.add_task(
+            generate_article_task,
+            article_id=str(article_id),
+            article_data=article_data,
+            user_id=str(current_user.get("id"))
+        )
+        
+        return {
+            "message": "キーワードを選択しました。記事生成を開始します。",
+            "selected_keywords": selected_keywords,
+            "selected_count": len(selected_keywords)
+        }
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="キーワード分析データが見つかりません"
+        )
+
+
+@router.post(
+    "/{article_id}/publish-wordpress",
+    dependencies=[Depends(rate_limit(limit=10, window_seconds=300))]
+)
 async def publish_article_to_wordpress_endpoint(
     article_id: UUID,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """WordPressに記事を投稿（提供コードと同じ形式）"""
@@ -309,6 +457,12 @@ async def publish_article_to_wordpress_endpoint(
                 action="published_wordpress",
                 changes={"wordpress_article_id": wordpress_article_id}
             )
+            create_audit_log(
+                user_id=user_id,
+                action="article_published_wordpress",
+                metadata={"article_id": str(article_id), "wordpress_article_id": wordpress_article_id},
+                ip_address=get_client_ip(request)
+            )
             
             return {
                 "message": "記事をWordPressに投稿しました",
@@ -330,4 +484,3 @@ async def publish_article_to_wordpress_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"WordPress投稿エラー: {str(e)}"
         )
-

@@ -1,15 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form
 from typing import List, Optional
 from uuid import UUID
 import os
 import uuid
 from app.supabase_db import (
     get_user_images_by_user_id, get_user_images_by_keyword,
-    get_user_image_by_id, create_user_image, update_user_image, delete_user_image
+    get_user_image_by_id, create_user_image, update_user_image, delete_user_image,
+    create_audit_log
 )
 from app.schemas import UserImageCreate, UserImageUpdate, UserImageResponse
 from app.dependencies import get_current_user
 from app.supabase_client import get_supabase_client
+from app.rate_limit import rate_limit
+from app.utils import get_client_ip
 
 router = APIRouter()
 
@@ -30,13 +33,18 @@ async def get_user_images(
     return images
 
 
-@router.post("", response_model=UserImageResponse)
+@router.post(
+    "",
+    response_model=UserImageResponse,
+    dependencies=[Depends(rate_limit(limit=20, window_seconds=60))]
+)
 async def create_user_image_endpoint(
     image_data: UserImageCreate = None,
     keyword: str = Form(None),
     image_url: str = Form(None),
     alt_text: Optional[str] = Form(None),
     file: UploadFile = File(None),
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """新規画像を登録（URLまたはファイルアップロード）"""
@@ -116,6 +124,12 @@ async def create_user_image_endpoint(
         image_url=image_url,
         alt_text=alt_text
     )
+    create_audit_log(
+        user_id=user_id,
+        action="image_created",
+        metadata={"image_id": image.get("id"), "keyword": keyword},
+        ip_address=get_client_ip(request)
+    )
     
     return image
 
@@ -138,10 +152,15 @@ async def get_user_image(
     return image
 
 
-@router.put("/{image_id}", response_model=UserImageResponse)
+@router.put(
+    "/{image_id}",
+    response_model=UserImageResponse,
+    dependencies=[Depends(rate_limit(limit=30, window_seconds=60))]
+)
 async def update_user_image_endpoint(
     image_id: UUID,
     image_update: UserImageUpdate,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """画像を更新"""
@@ -173,12 +192,22 @@ async def update_user_image_endpoint(
             detail="画像の更新に失敗しました"
         )
     
+    create_audit_log(
+        user_id=user_id,
+        action="image_updated",
+        metadata={"image_id": str(image_id), "fields": list(updates.keys())},
+        ip_address=get_client_ip(request)
+    )
     return image
 
 
-@router.delete("/{image_id}")
+@router.delete(
+    "/{image_id}",
+    dependencies=[Depends(rate_limit(limit=30, window_seconds=60))]
+)
 async def delete_user_image_endpoint(
     image_id: UUID,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """画像を削除（Storageからも削除）"""
@@ -210,6 +239,11 @@ async def delete_user_image_endpoint(
     
     # データベースから削除
     delete_user_image(str(image_id), user_id)
+    create_audit_log(
+        user_id=user_id,
+        action="image_deleted",
+        metadata={"image_id": str(image_id)},
+        ip_address=get_client_ip(request)
+    )
     
     return {"message": "画像を削除しました"}
-

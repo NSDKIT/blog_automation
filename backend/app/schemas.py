@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 from uuid import UUID
 
@@ -44,6 +44,11 @@ class ArticleCreate(BaseModel):
     important_keyword2: Optional[str] = None
     important_keyword3: Optional[str] = None
     sheet_id: Optional[str] = None  # 後方互換性のため残すが、使用しない
+    # SEO関連フィールド
+    search_intent: Optional[str] = "情報収集"  # 情報収集/購買検討/比較検討/問題解決
+    target_location: Optional[str] = "Japan"  # 検索地域
+    device_type: Optional[str] = "mobile"  # mobile/desktop
+    secondary_keywords: Optional[List[str]] = None  # サブキーワード配列
 
 
 class ArticleResponse(BaseModel):
@@ -58,6 +63,26 @@ class ArticleResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    # SEO関連フィールド
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    search_intent: Optional[str] = None
+    target_location: Optional[str] = None
+    device_type: Optional[str] = None
+    serp_data: Optional[Dict] = None
+    serp_headings_analysis: Optional[Dict] = None
+    serp_common_patterns: Optional[Dict] = None
+    serp_faq_items: Optional[List[str]] = None
+    keyword_volume_data: Optional[Dict] = None
+    related_keywords: Optional[List[Dict]] = None
+    keyword_difficulty: Optional[Dict] = None
+    subtopics: Optional[List[str]] = None
+    content_structure: Optional[Dict] = None
+    structured_data: Optional[Dict] = None
+    best_keywords: Optional[List[Dict]] = None  # 最適なキーワードリスト（スコアリング済み）
+    analyzed_keywords: Optional[List[Dict]] = None  # 分析済みキーワードリスト（全100個）
+    selected_keywords: Optional[List[str]] = None  # ユーザーが選択したキーワード
+    selected_keywords_data: Optional[List[Dict]] = None  # 選択されたキーワードの詳細データ
 
     class Config:
         from_attributes = True
@@ -79,6 +104,7 @@ class SettingResponse(BaseModel):
     id: UUID
     key: str
     value: str
+    is_masked: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -133,4 +159,3 @@ class UserOptionResponse(BaseModel):
 
     class Config:
         from_attributes = True
-

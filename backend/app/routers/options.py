@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from typing import List
 from uuid import UUID
 from app.supabase_db import (
     get_user_options_by_category, get_user_option_by_id,
-    create_user_option, update_user_option, delete_user_option
+    create_user_option, update_user_option, delete_user_option, create_audit_log
 )
 from app.schemas import UserOptionCreate, UserOptionUpdate, UserOptionResponse
 from app.dependencies import get_current_user
+from app.rate_limit import rate_limit
+from app.utils import get_client_ip
 
 router = APIRouter()
 
@@ -29,9 +31,14 @@ async def get_user_options(
     return options
 
 
-@router.post("", response_model=UserOptionResponse)
+@router.post(
+    "",
+    response_model=UserOptionResponse,
+    dependencies=[Depends(rate_limit(limit=30, window_seconds=60))]
+)
 async def create_user_option_endpoint(
     option_data: UserOptionCreate,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """新規選択肢を登録"""
@@ -48,6 +55,12 @@ async def create_user_option_endpoint(
         category=option_data.category,
         value=option_data.value,
         display_order=option_data.display_order or 0
+    )
+    create_audit_log(
+        user_id=user_id,
+        action="option_created",
+        metadata={"option_id": option.get("id"), "category": option_data.category},
+        ip_address=get_client_ip(request)
     )
     
     return option
@@ -71,10 +84,15 @@ async def get_user_option(
     return option
 
 
-@router.put("/{option_id}", response_model=UserOptionResponse)
+@router.put(
+    "/{option_id}",
+    response_model=UserOptionResponse,
+    dependencies=[Depends(rate_limit(limit=30, window_seconds=60))]
+)
 async def update_user_option_endpoint(
     option_id: UUID,
     option_update: UserOptionUpdate,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """選択肢を更新"""
@@ -104,12 +122,23 @@ async def update_user_option_endpoint(
             detail="選択肢の更新に失敗しました"
         )
     
+    create_audit_log(
+        user_id=user_id,
+        action="option_updated",
+        metadata={"option_id": str(option_id), "fields": list(updates.keys())},
+        ip_address=get_client_ip(request)
+    )
+    
     return option
 
 
-@router.delete("/{option_id}")
+@router.delete(
+    "/{option_id}",
+    dependencies=[Depends(rate_limit(limit=30, window_seconds=60))]
+)
 async def delete_user_option_endpoint(
     option_id: UUID,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
     """選択肢を削除"""
@@ -125,6 +154,11 @@ async def delete_user_option_endpoint(
     
     # 選択肢を削除
     delete_user_option(str(option_id), user_id)
+    create_audit_log(
+        user_id=user_id,
+        action="option_deleted",
+        metadata={"option_id": str(option_id)},
+        ip_address=get_client_ip(request)
+    )
     
     return {"message": "選択肢を削除しました"}
-

@@ -3,6 +3,11 @@ Supabaseクライアントを使用したデータベース操作
 全てのデータをSupabaseで管理
 """
 from app.supabase_client import get_supabase_client
+from app.security import (
+    decrypt_sensitive_value,
+    encrypt_sensitive_value,
+    prepare_setting_for_response,
+)
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 import uuid
@@ -213,7 +218,8 @@ def get_settings_by_user_id(user_id: str) -> List[Dict]:
         .select("*")\
         .eq("user_id", user_id)\
         .execute()
-    return response.data or []
+    settings = response.data or []
+    return [prepare_setting_for_response(setting) for setting in settings]
 
 
 def get_setting_by_key(user_id: str, key: str) -> Optional[str]:
@@ -227,13 +233,15 @@ def get_setting_by_key(user_id: str, key: str) -> Optional[str]:
         .execute()
     
     if response.data and len(response.data) > 0:
-        return response.data[0].get("value")
+        value = response.data[0].get("value")
+        return decrypt_sensitive_value(key, value)
     return None
 
 
 def upsert_setting(user_id: str, key: str, value: str) -> Dict:
     """設定を更新または作成"""
     supabase = get_supabase()
+    secure_value = encrypt_sensitive_value(key, value)
     # 既存の設定を確認
     existing = supabase.table("settings")\
         .select("*")\
@@ -245,7 +253,7 @@ def upsert_setting(user_id: str, key: str, value: str) -> Dict:
     setting_data = {
         "user_id": user_id,
         "key": key,
-        "value": value
+        "value": secure_value
     }
     
     if existing.data and len(existing.data) > 0:
@@ -261,7 +269,7 @@ def upsert_setting(user_id: str, key: str, value: str) -> Dict:
         response = supabase.table("settings").insert(setting_data).execute()
     
     if response.data and len(response.data) > 0:
-        return response.data[0]
+        return prepare_setting_for_response(response.data[0])
     raise Exception("Failed to upsert setting")
 
 
@@ -431,3 +439,28 @@ def delete_user_option(option_id: str, user_id: str) -> bool:
         .execute()
     return True
 
+
+# ============================================
+# Audit logs
+# ============================================
+
+def create_audit_log(
+    user_id: Optional[str],
+    action: str,
+    metadata: Optional[Dict[str, Any]] = None,
+    ip_address: Optional[str] = None
+) -> None:
+    """ユーザー操作を監査ログに記録（失敗しても処理は継続）"""
+    try:
+        supabase = get_supabase()
+        log_data = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "action": action,
+            "metadata": metadata or {},
+            "ip_address": ip_address,
+        }
+        supabase.table("audit_logs").insert(log_data).execute()
+    except Exception as exc:
+        # 監査ログの失敗でアプリの処理を止めない
+        print(f"[AUDIT] Failed to create audit log: {exc}")

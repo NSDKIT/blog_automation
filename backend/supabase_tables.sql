@@ -62,6 +62,29 @@ CREATE INDEX IF NOT EXISTS idx_articles_created_at ON articles(created_at DESC);
 CREATE TRIGGER update_articles_updated_at BEFORE UPDATE ON articles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- SEO関連カラムの追加（既存テーブルに追加する場合）
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS serp_data JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS serp_headings_analysis JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS serp_common_patterns JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS serp_faq_items JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS keyword_volume_data JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS related_keywords JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS keyword_difficulty JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS meta_title TEXT;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS meta_description TEXT;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS subtopics JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS content_structure JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS search_intent VARCHAR(50);
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS target_location VARCHAR(50) DEFAULT 'Japan';
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS device_type VARCHAR(20) DEFAULT 'mobile';
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS structured_data JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS shopify_json JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS error_message TEXT;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS best_keywords JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS analyzed_keywords JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS selected_keywords JSONB;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS selected_keywords_data JSONB;
+
 -- ============================================
 -- 3. article_histories テーブル（記事履歴）
 -- ============================================
@@ -119,6 +142,22 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_base_content_trgm ON knowledge_base USI
 -- updated_atを自動更新するトリガー
 CREATE TRIGGER update_knowledge_base_updated_at BEFORE UPDATE ON knowledge_base
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- 6. audit_logs テーブル（監査ログ）
+-- ============================================
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id),
+    action VARCHAR(255) NOT NULL,
+    metadata JSONB,
+    ip_address VARCHAR(64),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
 -- ============================================
 -- 6. images テーブル（画像管理）
@@ -232,4 +271,3 @@ INSERT INTO images (url, alt_text, category, keywords) VALUES
 ('https://example.com/glasses2.jpg', '眼鏡の画像2', '1n908lNr3Pum1BrcSyvxfyCJgiYG-KAhOreJszJHHYJw', ARRAY['眼鏡', 'ブルーライト']),
 ('https://example.com/glasses3.jpg', '眼鏡の画像3', '1n908lNr3Pum1BrcSyvxfyCJgiYG-KAhOreJszJHHYJw', ARRAY['眼鏡', 'ゲーミング'])
 ON CONFLICT DO NOTHING;
-

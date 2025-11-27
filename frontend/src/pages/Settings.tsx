@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { settingsApi } from '../api/settings'
 import { imagesApi } from '../api/images'
 import { optionsApi } from '../api/options'
+import { useAuthStore } from '../store/authStore'
 
 interface ShopifySettings {
   shopify_shop_domain: string
@@ -24,6 +25,8 @@ function ImageKeywordSection() {
   const [altText, setAltText] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file')
+  const token = useAuthStore((state) => state.token)
+  const apiBaseUrl = import.meta.env.VITE_API_URL || '/api'
 
   const { data: images } = useQuery({
     queryKey: ['images'],
@@ -40,12 +43,15 @@ function ImageKeywordSection() {
         if (data.alt_text) {
           formData.append('alt_text', data.alt_text)
         }
-        
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/images`, {
+
+        const headers: Record<string, string> = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
+        const response = await fetch(`${apiBaseUrl}/images`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth-storage') ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token : ''}`
-          },
+          headers,
           body: formData
         })
         
@@ -297,30 +303,29 @@ export default function Settings() {
     queryKey: ['settings'],
     queryFn: settingsApi.getSettings,
   })
+  const isSettingMasked = (key: string) =>
+    settings?.find((s) => s.key === key)?.is_masked ?? false
 
   // 設定からShopify情報を読み込む
   useEffect(() => {
-    if (settings) {
-      const shopDomain = settings.find(s => s.key === 'shopify_shop_domain')?.value || ''
-      const accessToken = settings.find(s => s.key === 'shopify_access_token')?.value || ''
-      const blogId = settings.find(s => s.key === 'shopify_blog_id')?.value || ''
-      
-      setShopifySettings({
-        shopify_shop_domain: shopDomain,
-        shopify_access_token: accessToken,
-        shopify_blog_id: blogId,
-      })
-
-      const wpUrl = settings.find(s => s.key === 'wordpress_url')?.value || ''
-      const wpUser = settings.find(s => s.key === 'wordpress_user')?.value || ''
-      const wpPass = settings.find(s => s.key === 'wordpress_pass')?.value || ''
-      
-      setWordpressSettings({
-        wordpress_url: wpUrl,
-        wordpress_user: wpUser,
-        wordpress_pass: wpPass,
-      })
+    if (!settings) return
+    const valueFor = (key: string) => {
+      const entry = settings.find((s) => s.key === key)
+      if (!entry) return ''
+      return entry.is_masked ? '' : entry.value
     }
+
+    setShopifySettings({
+      shopify_shop_domain: valueFor('shopify_shop_domain'),
+      shopify_access_token: valueFor('shopify_access_token'),
+      shopify_blog_id: valueFor('shopify_blog_id'),
+    })
+
+    setWordpressSettings({
+      wordpress_url: valueFor('wordpress_url'),
+      wordpress_user: valueFor('wordpress_user'),
+      wordpress_pass: valueFor('wordpress_pass'),
+    })
   }, [settings])
 
   const updateMutation = useMutation({
@@ -420,6 +425,11 @@ export default function Settings() {
             <p className="mt-1 text-xs text-gray-500">
               Shopify管理画面 &gt; Settings &gt; Apps and sales channels &gt; Develop apps から取得
             </p>
+            {isSettingMasked('shopify_access_token') && (
+              <p className="mt-1 text-xs text-indigo-600">
+                現在の値は安全のため非表示です。更新する場合は再入力してください。
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -501,6 +511,11 @@ export default function Settings() {
             <p className="mt-1 text-xs text-gray-500">
               Application Passwordsで設定されたパスワード（例: sPVm AtAS 8Uzu B4x1 FvwP AnMc）
             </p>
+            {isSettingMasked('wordpress_pass') && (
+              <p className="mt-1 text-xs text-indigo-600">
+                現在の値は安全のため非表示です。更新する場合は再入力してください。
+              </p>
+            )}
           </div>
           <button
             type="submit"
@@ -524,18 +539,16 @@ export default function Settings() {
       {/* その他の設定セクション */}
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">その他の設定</h2>
-        {settings && settings.filter(s => !s.key.startsWith('shopify_')).length > 0 ? (
+        {settings && settings.filter(s => !s.key.startsWith('shopify_') && !s.key.startsWith('wordpress_')).length > 0 ? (
           <ul className="divide-y divide-gray-200">
             {settings
-              .filter(s => !s.key.startsWith('shopify_'))
+              .filter(s => !s.key.startsWith('shopify_') && !s.key.startsWith('wordpress_'))
               .map((setting) => (
                 <li key={setting.id} className="py-4">
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-900">{setting.key}</span>
                     <span className="text-gray-500">
-                      {setting.key.includes('token') || setting.key.includes('key') || setting.key.includes('password')
-                        ? '••••••••'
-                        : setting.value}
+                      {setting.is_masked ? '••••••••' : setting.value}
                     </span>
                   </div>
                 </li>
@@ -676,4 +689,3 @@ function UserOptionsSection() {
     </div>
   )
 }
-

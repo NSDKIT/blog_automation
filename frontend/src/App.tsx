@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ArticleNew from './pages/ArticleNew'
 import ArticleDetail from './pages/ArticleDetail'
+import KeywordSelection from './pages/KeywordSelection'
 import Settings from './pages/Settings'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/Layout'
@@ -47,6 +48,16 @@ function App() {
               <PrivateRoute>
                 <Layout>
                   <ArticleDetail />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/articles/:id/keywords"
+            element={
+              <PrivateRoute>
+                <Layout>
+                  <KeywordSelection />
                 </Layout>
               </PrivateRoute>
             }

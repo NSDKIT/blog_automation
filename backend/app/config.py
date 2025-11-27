@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     shopify_access_token: str = ""
     shopify_blog_id: str = ""
     
+    # DataForSEO
+    dataforseo_login: str = ""
+    dataforseo_password: str = ""
+    
     # CORS (文字列として受け取り、後でsplit)
     cors_origins_str: str = "http://localhost:3000,http://localhost:5173"
     

@@ -4,6 +4,7 @@ export interface Setting {
   id: string
   key: string
   value: string
+  is_masked: boolean
   created_at: string
   updated_at: string
 }
@@ -23,4 +24,3 @@ export const settingsApi = {
     return response.data
   },
 }
-
