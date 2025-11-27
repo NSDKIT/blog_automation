@@ -17,8 +17,13 @@ export default function KeywordSelection() {
     enabled: !!id,
     refetchInterval: (query) => {
       const article = query.state.data
-      if (article?.status === 'keyword_analysis') {
+      // keyword_analysisまたはkeyword_selectionの場合はポーリング
+      if (article?.status === 'keyword_analysis' || article?.status === 'keyword_selection') {
         return 2000 // 2秒ごとにポーリング
+      }
+      // 記事作成直後（statusがまだ設定されていない場合）もポーリング
+      if (!article?.status || article?.status === 'draft' || article?.status === 'processing') {
+        return 2000
       }
       return false
     },
@@ -107,15 +112,17 @@ export default function KeywordSelection() {
     return <div className="text-center py-12">記事が見つかりません</div>
   }
 
-  if (article.status === 'keyword_analysis') {
+  // キーワード分析中または記事作成直後の場合
+  if (article.status === 'keyword_analysis' || !article.status || article.status === 'draft' || article.status === 'processing') {
     const progress = article.keyword_analysis_progress || {}
+    const isKeywordAnalysis = article.status === 'keyword_analysis'
     
     // 進捗状況のチェックリスト
     const steps = [
       {
         key: 'status_check',
         label: '記事のstatusがkeyword_analysisであること',
-        completed: progress.status_check || false,
+        completed: progress.status_check || isKeywordAnalysis,
       },
       {
         key: 'openai_generation',
@@ -241,11 +248,12 @@ export default function KeywordSelection() {
     )
   }
 
-  if (article.status !== 'keyword_selection') {
+  // keyword_selectionでもkeyword_analysisでもない場合（完了済みなど）
+  if (article.status !== 'keyword_selection' && article.status !== 'keyword_analysis' && article.status !== 'draft' && article.status !== 'processing') {
     return (
       <div className="px-4 py-6 sm:px-0">
         <div className="text-center py-12">
-          <p className="text-gray-600">この記事は既に処理済みです</p>
+          <p className="text-gray-600">この記事は既に処理済みです（ステータス: {article.status}）</p>
           <button
             onClick={() => navigate(`/articles/${id}`)}
             className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
