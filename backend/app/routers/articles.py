@@ -72,12 +72,14 @@ async def create_article_endpoint(
     
     # バックグラウンドでキーワード分析を開始
     from app.tasks import analyze_keywords_task
+    print(f"[create_article_endpoint] キーワード分析タスクを開始: article_id={article.get('id')}")
     background_tasks.add_task(
         analyze_keywords_task,
         article_id=article.get("id"),
         article_data=article_data.dict(),
         user_id=str(current_user.get("id"))
     )
+    print(f"[create_article_endpoint] キーワード分析タスクを追加しました")
     create_audit_log(
         user_id=str(current_user.get("id")),
         action="article_created",

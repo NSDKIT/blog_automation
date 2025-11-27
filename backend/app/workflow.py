@@ -81,46 +81,56 @@ class ArticleGenerator:
             ]
             secondary_keywords = article_data.get("secondary_keywords", [])
             
-            # OpenAIで関連キーワード100個を生成
+            # ユーザーが選択したキーワードがある場合はそれを使用（キーワード選択機能経由）
+            # 選択されたキーワードがない場合のみ、新規にキーワード生成・分析を行う
             keywords_data = None
-            try:
-                print("OpenAIで関連キーワード100個を生成中...")
-                related_keywords_100 = generate_related_keywords_with_openai(
-                    main_keyword=keyword,
-                    important_keywords=important_keywords,
-                    secondary_keywords=secondary_keywords or [],
-                    openai_client=self.openai_client
-                )
-                
-                if related_keywords_100:
-                    print(f"生成されたキーワード数: {len(related_keywords_100)}")
-                    
-                    # DataForSEOで検索ボリューム・競合度を取得
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    
-                    # 100個のキーワードをバッチで取得（DataForSEOは最大100個まで）
-                    keywords_data = loop.run_until_complete(
-                        get_keywords_data(
-                            keywords=related_keywords_100[:100],
-                            location_code=2840,
-                            language_code="ja",
-                            user_id=self.user_id
-                        )
+            best_keywords = []
+            
+            # 選択されたキーワードがある場合は、それを使用してbest_keywordsを作成
+            if secondary_keywords and len(secondary_keywords) > 0:
+                print(f"選択されたキーワードを使用: {len(secondary_keywords)}個")
+                # 選択されたキーワードをbest_keywords形式に変換
+                best_keywords = [{"keyword": kw} for kw in secondary_keywords[:20]]
+            else:
+                # キーワード選択機能を使わない場合（後方互換性のため）
+                try:
+                    print("OpenAIで関連キーワード100個を生成中...")
+                    related_keywords_100 = generate_related_keywords_with_openai(
+                        main_keyword=keyword,
+                        important_keywords=important_keywords,
+                        secondary_keywords=secondary_keywords or [],
+                        openai_client=self.openai_client
                     )
                     
-                    if keywords_data:
-                        # キーワードをスコアリング
-                        scored_keywords = score_keywords(keywords_data)
+                    if related_keywords_100:
+                        print(f"生成されたキーワード数: {len(related_keywords_100)}")
                         
-                        # 最適なキーワードを上位20個取得
-                        best_keywords = get_best_keywords(scored_keywords, top_n=20)
-                        print(f"最適なキーワードを{len(best_keywords)}個選定しました")
-                    
-                    loop.close()
-            except Exception as e:
-                print(f"キーワード生成・分析エラー（続行）: {str(e)}")
-                # エラーが発生しても記事生成は続行
+                        # DataForSEOで検索ボリューム・競合度を取得
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        
+                        # 100個のキーワードをバッチで取得（DataForSEOは最大100個まで）
+                        keywords_data = loop.run_until_complete(
+                            get_keywords_data(
+                                keywords=related_keywords_100[:100],
+                                location_code=2840,
+                                language_code="ja",
+                                user_id=self.user_id
+                            )
+                        )
+                        
+                        if keywords_data:
+                            # キーワードをスコアリング
+                            scored_keywords = score_keywords(keywords_data)
+                            
+                            # 最適なキーワードを上位20個取得
+                            best_keywords = get_best_keywords(scored_keywords, top_n=20)
+                            print(f"最適なキーワードを{len(best_keywords)}個選定しました")
+                        
+                        loop.close()
+                except Exception as e:
+                    print(f"キーワード生成・分析エラー（続行）: {str(e)}")
+                    # エラーが発生しても記事生成は続行
             
             # 元のキーワードも含める
             all_keywords = [keyword] + important_keywords + (secondary_keywords or [])

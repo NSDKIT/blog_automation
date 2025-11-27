@@ -127,22 +127,26 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         article_data: 記事データ
         user_id: ユーザーID（オプション、指定されない場合は記事から取得）
     """
+    print(f"[analyze_keywords_task] 開始: article_id={article_id}, user_id={user_id}")
     try:
         # 記事を取得してuser_idを確認
         from app.supabase_client import get_supabase_client
         supabase = get_supabase_client()
         if not supabase:
-            print("Supabase client is not configured")
+            print("[analyze_keywords_task] エラー: Supabase client is not configured")
+            update_article(article_id, user_id, {"status": "failed", "error_message": "Supabase client is not configured"})
             return
         
         article_response = supabase.table("articles").select("*").eq("id", article_id).limit(1).execute()
         if not article_response.data or len(article_response.data) == 0:
-            print(f"Article not found: {article_id}")
+            print(f"[analyze_keywords_task] エラー: Article not found: {article_id}")
             return
         
         article = article_response.data[0]
         if not user_id:
             user_id = article.get("user_id")
+        
+        print(f"[analyze_keywords_task] 記事を取得: status={article.get('status')}, keyword={article.get('keyword')}")
         
         # OpenAIクライアントを取得
         from app.workflow import ArticleGenerator
@@ -159,7 +163,7 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         secondary_keywords = article_data.get("secondary_keywords", [])
         
         # OpenAIで関連キーワード100個を生成
-        print("OpenAIで関連キーワード100個を生成中...")
+        print(f"[analyze_keywords_task] OpenAIで関連キーワード100個を生成中... keyword={keyword}")
         related_keywords_100 = generate_related_keywords_with_openai(
             main_keyword=keyword,
             important_keywords=important_keywords,
@@ -168,6 +172,7 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         )
         
         if not related_keywords_100:
+            print("[analyze_keywords_task] エラー: キーワード生成に失敗しました")
             update_article(
                 article_id,
                 user_id,
@@ -175,7 +180,7 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
             )
             return
         
-        print(f"生成されたキーワード数: {len(related_keywords_100)}")
+        print(f"[analyze_keywords_task] 生成されたキーワード数: {len(related_keywords_100)}")
         
         # DataForSEOで検索ボリューム・競合度を取得（ハイブリッド方式）
         loop = asyncio.new_event_loop()
@@ -183,7 +188,7 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         
         try:
             # ステップ1: dataforseo_labsで100個のキーワードを広く分析（コスト抑制）
-            print("dataforseo_labsで100個のキーワードを分析中...")
+            print(f"[analyze_keywords_task] dataforseo_labsで100個のキーワードを分析中...")
             keywords_data = loop.run_until_complete(
                 get_keywords_data(
                     keywords=related_keywords_100[:100],
@@ -194,12 +199,15 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
             )
             
             if not keywords_data:
+                print("[analyze_keywords_task] エラー: キーワードデータの取得に失敗しました")
                 update_article(
                     article_id,
                     user_id,
                     {"status": "failed", "error_message": "キーワードデータの取得に失敗しました"}
                 )
                 return
+            
+            print(f"[analyze_keywords_task] キーワードデータを取得: {len(keywords_data)}個")
             
             # ステップ2: 初期スコアリング
             scored_keywords = score_keywords(keywords_data)
@@ -222,57 +230,57 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
                     
                     # Google Ads APIのデータで上位20個を更新
                     if google_ads_data:
-                    # Google Ads APIのデータ構造をdataforseo_labs形式に変換
-                    google_ads_dict = {}
-                    for item in google_ads_data:
-                        kw_info = item.get("keyword_info", {})
-                        keyword = kw_info.get("keyword", "")
-                        if keyword:
-                            google_ads_dict[keyword] = {
-                                "keyword_info": kw_info
-                            }
-                    
-                    # 上位20個のキーワードデータを更新
-                    for i, kw in enumerate(scored_keywords[:20]):
-                        keyword = kw["keyword"]
-                        if keyword in google_ads_dict:
-                            # Google Ads APIのデータで更新
-                            updated_data = google_ads_dict[keyword]
-                            updated_kw_info = updated_data.get("keyword_info", {})
-                            
-                            # より正確なデータで更新
-                            scored_keywords[i]["search_volume"] = updated_kw_info.get("search_volume", kw.get("search_volume", 0))
-                            scored_keywords[i]["competition_index"] = updated_kw_info.get("competition_index", kw.get("competition_index", 100))
-                            scored_keywords[i]["cpc"] = updated_kw_info.get("cpc", kw.get("cpc", 0))
-                            
-                            # スコアを再計算
-                            search_volume = scored_keywords[i]["search_volume"]
-                            competition_index = scored_keywords[i]["competition_index"]
-                            
-                            # 検索ボリュームスコア
-                            if search_volume > 0:
-                                import math
-                                if search_volume >= 1000:
-                                    volume_score = 100
-                                elif search_volume >= 100:
-                                    volume_score = 70 + (search_volume - 100) / 900 * 30
-                                elif search_volume >= 10:
-                                    volume_score = 40 + (search_volume - 10) / 90 * 30
+                        # Google Ads APIのデータ構造をdataforseo_labs形式に変換
+                        google_ads_dict = {}
+                        for item in google_ads_data:
+                            kw_info = item.get("keyword_info", {})
+                            keyword = kw_info.get("keyword", "")
+                            if keyword:
+                                google_ads_dict[keyword] = {
+                                    "keyword_info": kw_info
+                                }
+                        
+                        # 上位20個のキーワードデータを更新
+                        for i, kw in enumerate(scored_keywords[:20]):
+                            keyword = kw["keyword"]
+                            if keyword in google_ads_dict:
+                                # Google Ads APIのデータで更新
+                                updated_data = google_ads_dict[keyword]
+                                updated_kw_info = updated_data.get("keyword_info", {})
+                                
+                                # より正確なデータで更新
+                                scored_keywords[i]["search_volume"] = updated_kw_info.get("search_volume", kw.get("search_volume", 0))
+                                scored_keywords[i]["competition_index"] = updated_kw_info.get("competition_index", kw.get("competition_index", 100))
+                                scored_keywords[i]["cpc"] = updated_kw_info.get("cpc", kw.get("cpc", 0))
+                                
+                                # スコアを再計算
+                                search_volume = scored_keywords[i]["search_volume"]
+                                competition_index = scored_keywords[i]["competition_index"]
+                                
+                                # 検索ボリュームスコア
+                                if search_volume > 0:
+                                    import math
+                                    if search_volume >= 1000:
+                                        volume_score = 100
+                                    elif search_volume >= 100:
+                                        volume_score = 70 + (search_volume - 100) / 900 * 30
+                                    elif search_volume >= 10:
+                                        volume_score = 40 + (search_volume - 10) / 90 * 30
+                                    else:
+                                        volume_score = search_volume / 10 * 40
                                 else:
-                                    volume_score = search_volume / 10 * 40
-                            else:
-                                volume_score = 0
-                            
-                            # 競合度スコア
-                            competition_score = max(0, 100 - competition_index)
-                            
-                            # 総合スコア
-                            total_score = (volume_score * 0.6) + (competition_score * 0.4)
-                            
-                            scored_keywords[i]["volume_score"] = round(volume_score, 2)
-                            scored_keywords[i]["competition_score"] = round(competition_score, 2)
-                            scored_keywords[i]["total_score"] = round(total_score, 2)
-                    
+                                    volume_score = 0
+                                
+                                # 競合度スコア
+                                competition_score = max(0, 100 - competition_index)
+                                
+                                # 総合スコア
+                                total_score = (volume_score * 0.6) + (competition_score * 0.4)
+                                
+                                scored_keywords[i]["volume_score"] = round(volume_score, 2)
+                                scored_keywords[i]["competition_score"] = round(competition_score, 2)
+                                scored_keywords[i]["total_score"] = round(total_score, 2)
+                        
                         # スコアで再ソート
                         scored_keywords.sort(key=lambda x: x["total_score"], reverse=True)
                         print(f"Google Ads APIで上位20個のキーワードを更新しました")
@@ -291,22 +299,30 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
                 "status": "keyword_selection",  # キーワード選択待ち
                 "analyzed_keywords": json.dumps(scored_keywords, ensure_ascii=False)
             }
+            print(f"[analyze_keywords_task] ステータスを更新: keyword_selection, キーワード数: {len(scored_keywords)}")
             update_article(article_id, user_id, updates)
-            print(f"キーワード分析完了: {len(scored_keywords)}個のキーワードを分析しました")
+            print(f"[analyze_keywords_task] キーワード分析完了: {len(scored_keywords)}個のキーワードを分析しました")
         finally:
             loop.close()
             
     except Exception as e:
         error_message = str(e)
+        import traceback
+        print(f"[analyze_keywords_task] エラー発生: {error_message}")
+        print(f"[analyze_keywords_task] トレースバック:\n{traceback.format_exc()}")
         try:
-            article_response = supabase.table("articles").select("*").eq("id", article_id).limit(1).execute()
-            if article_response.data and len(article_response.data) > 0:
-                article = article_response.data[0]
-                update_article(
-                    article_id,
-                    article.get("user_id"),
-                    {"status": "failed", "error_message": error_message[:1000]}
-                )
-        except:
-            pass
-        print(f"キーワード分析エラー: {error_message}")
+            from app.supabase_client import get_supabase_client
+            supabase = get_supabase_client()
+            if supabase:
+                article_response = supabase.table("articles").select("*").eq("id", article_id).limit(1).execute()
+                if article_response.data and len(article_response.data) > 0:
+                    article = article_response.data[0]
+                    update_article(
+                        article_id,
+                        article.get("user_id"),
+                        {"status": "failed", "error_message": error_message[:1000]}
+                    )
+                    print(f"[analyze_keywords_task] エラーを記事に保存しました")
+        except Exception as update_error:
+            print(f"[analyze_keywords_task] エラー保存に失敗: {str(update_error)}")
+        print(f"[analyze_keywords_task] キーワード分析エラー: {error_message}")
