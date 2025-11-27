@@ -63,6 +63,22 @@ async def create_article_endpoint(
         status="keyword_analysis"  # キーワード分析待ちのステータス
     )
     
+    # 初期進捗状況を設定
+    import json
+    initial_progress = {
+        "status_check": False,
+        "openai_generation": False,
+        "dataforseo_fetch": False,
+        "scoring_completed": False,
+        "current_step": "status_check",
+        "error_message": None
+    }
+    update_article(
+        article.get("id"),
+        str(current_user.get("id")),
+        {"keyword_analysis_progress": json.dumps(initial_progress, ensure_ascii=False)}
+    )
+    
     # 履歴を記録
     create_article_history(
         article_id=article.get("id"),

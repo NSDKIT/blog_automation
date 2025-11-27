@@ -195,7 +195,7 @@ class ArticleGenerator:
                     "serp_analysis": serp_analysis
                 }
             else:
-                analysis = self._analyze_articles(google_results)
+            analysis = self._analyze_articles(google_results)
             
             # サブトピック生成
             try:
@@ -620,7 +620,7 @@ class ArticleGenerator:
             "competition_index": keyword_info.get("competition_index", 0),
             "cpc": keyword_info.get("cpc", 0)
         }
-    
+
     def _extract_json_string(self, raw_text: str) -> str:
         """GeminiのレスポンスからJSON文字列部分のみを抽出"""
         if not raw_text:
