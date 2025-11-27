@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { articlesApi } from '../api/articles'
 import { useMemo, useState, useEffect } from 'react'
 import DOMPurify from 'dompurify'
-import React from 'react'
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>()
