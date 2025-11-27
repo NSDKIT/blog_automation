@@ -1,16 +1,18 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { articlesApi } from '../api/articles'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import DOMPurify from 'dompurify'
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState('')
   const [editedContent, setEditedContent] = useState('')
+  const hasRedirected = useRef(false)
 
   const { data: article, isLoading } = useQuery({
     queryKey: ['article', id],
@@ -73,6 +75,18 @@ export default function ArticleDetail() {
     return <div className="text-center py-12">読み込み中...</div>
   }
 
+  // キーワード分析が完了したら自動でキーワード選択画面にリダイレクト
+  useEffect(() => {
+    if (article?.status === 'keyword_selection' && !location.pathname.includes('/keywords') && !hasRedirected.current) {
+      hasRedirected.current = true
+      navigate(`/articles/${id}/keywords`)
+    }
+    // ステータスが変わったらリセット
+    if (article?.status !== 'keyword_selection') {
+      hasRedirected.current = false
+    }
+  }, [article?.status, id, navigate, location.pathname])
+
   if (!article) {
     return <div className="text-center py-12">記事が見つかりません</div>
   }
@@ -118,13 +132,6 @@ export default function ArticleDetail() {
       </div>
     )
   }
-
-  // キーワード分析が完了したら自動でキーワード選択画面にリダイレクト
-  useEffect(() => {
-    if (article?.status === 'keyword_selection' && !window.location.pathname.includes('/keywords')) {
-      navigate(`/articles/${id}/keywords`)
-    }
-  }, [article?.status, id, navigate])
 
   const handleSave = () => {
     updateMutation.mutate({
