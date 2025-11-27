@@ -47,7 +47,8 @@ export default function ArticleNew() {
   const createMutation = useMutation({
     mutationFn: articlesApi.createArticle,
     onSuccess: (data) => {
-      navigate(`/articles/${data.id}`)
+      // キーワード分析中の画面を表示するため、直接キーワード選択ページにリダイレクト
+      navigate(`/articles/${data.id}/keywords`)
     },
   })
 
