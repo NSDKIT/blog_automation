@@ -55,6 +55,7 @@ async def create_article_endpoint(
     current_user: dict = Depends(get_current_user)
 ):
     # 記事レコードを作成
+    print(f"[create_article_endpoint] 記事作成開始: keyword={article_data.keyword}, status=keyword_analysis")
     article = create_article(
         user_id=str(current_user.get("id")),
         keyword=article_data.keyword,
@@ -62,6 +63,7 @@ async def create_article_endpoint(
         article_type=article_data.article_type,
         status="keyword_analysis"  # キーワード分析待ちのステータス
     )
+    print(f"[create_article_endpoint] 記事作成完了: id={article.get('id')}, status={article.get('status')}")
     
     # ステータスが正しく設定されているか確認し、必要に応じて再設定
     import json
@@ -77,6 +79,7 @@ async def create_article_endpoint(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="記事のステータス更新に失敗しました"
             )
+        print(f"[create_article_endpoint] ステータス更新完了: status={article.get('status')}")
     
     # 初期進捗状況を設定
     initial_progress = {

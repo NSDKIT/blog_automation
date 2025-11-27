@@ -159,9 +159,12 @@ def create_article(user_id: str, keyword: str, target: str, article_type: str, s
         "article_type": article_type,
         "status": status
     }
+    print(f"[create_article] 記事作成: status={status}, article_data={article_data}")
     response = supabase.table("articles").insert(article_data).execute()
     if response.data and len(response.data) > 0:
-        return _attach_error_message(response.data[0])
+        result = _attach_error_message(response.data[0])
+        print(f"[create_article] 記事作成完了: id={result.get('id')}, status={result.get('status')}")
+        return result
     raise Exception("Failed to create article")
 
 
@@ -171,13 +174,18 @@ def update_article(article_id: str, user_id: str, updates: Dict) -> Optional[Dic
     update_payload = dict(updates)
     if "error_message" in update_payload and not _supports_article_error_column():
         update_payload.pop("error_message", None)
+    if "status" in update_payload:
+        print(f"[update_article] ステータス更新: article_id={article_id}, status={update_payload.get('status')}")
     response = supabase.table("articles")\
         .update(update_payload)\
         .eq("id", article_id)\
         .eq("user_id", user_id)\
         .execute()
     if response.data and len(response.data) > 0:
-        return _attach_error_message(response.data[0])
+        result = _attach_error_message(response.data[0])
+        if "status" in update_payload:
+            print(f"[update_article] ステータス更新完了: article_id={article_id}, status={result.get('status')}")
+        return result
     return None
 
 
