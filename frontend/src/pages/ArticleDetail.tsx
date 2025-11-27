@@ -71,21 +71,23 @@ export default function ArticleDetail() {
     return DOMPurify.sanitize(article.content)
   }, [article?.content])
 
-  if (isLoading) {
-    return <div className="text-center py-12">読み込み中...</div>
-  }
-
   // キーワード分析が完了したら自動でキーワード選択画面にリダイレクト
   useEffect(() => {
-    if (article?.status === 'keyword_selection' && !location.pathname.includes('/keywords') && !hasRedirected.current) {
+    if (!article) return
+    
+    if (article.status === 'keyword_selection' && !location.pathname.includes('/keywords') && !hasRedirected.current) {
       hasRedirected.current = true
       navigate(`/articles/${id}/keywords`)
     }
     // ステータスが変わったらリセット
-    if (article?.status !== 'keyword_selection') {
+    if (article.status !== 'keyword_selection') {
       hasRedirected.current = false
     }
-  }, [article?.status, id, navigate, location.pathname])
+  }, [article, id, navigate, location.pathname])
+
+  if (isLoading) {
+    return <div className="text-center py-12">読み込み中...</div>
+  }
 
   if (!article) {
     return <div className="text-center py-12">記事が見つかりません</div>
