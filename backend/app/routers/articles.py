@@ -187,7 +187,29 @@ async def create_article_endpoint(
     # 最終確認: レスポンスを返す前に、最新の記事データを取得
     final_article = get_article_by_id(article.get("id"), str(current_user.get("id")))
     if final_article:
-        print(f"[create_article_endpoint] 最終レスポンス: status={final_article.get('status')}")
+        final_status = final_article.get('status')
+        print(f"[create_article_endpoint] 最終レスポンス: status={final_status}")
+        
+        # 最終的なstatusがkeyword_analysisでない場合、強制的に更新
+        if final_status != "keyword_analysis":
+            print(f"[create_article_endpoint] ⚠️ 重大な警告: 最終的なstatusがkeyword_analysisではありません。現在のstatus: '{final_status}'。強制的に更新します。")
+            force_updated = update_article(
+                article.get("id"),
+                str(current_user.get("id")),
+                {"status": "keyword_analysis"}
+            )
+            if force_updated:
+                final_article = force_updated
+                print(f"[create_article_endpoint] 強制更新後のstatus: {final_article.get('status')}")
+            else:
+                # 更新に失敗した場合、データベースから直接取得
+                from app.supabase_client import get_supabase_client
+                supabase = get_supabase_client()
+                if supabase:
+                    direct_check = supabase.table("articles").select("id, status").eq("id", article.get("id")).limit(1).execute()
+                    if direct_check.data:
+                        print(f"[create_article_endpoint] データベースから直接確認: status={direct_check.data[0].get('status')}")
+        
         return final_article
     else:
         print(f"[create_article_endpoint] 警告: 最終的な記事取得に失敗しました。既存のarticleを返します。")

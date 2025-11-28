@@ -159,13 +159,45 @@ def create_article(user_id: str, keyword: str, target: str, article_type: str, s
         "article_type": article_type,
         "status": status
     }
-    print(f"[create_article] 記事作成: status={status}, article_data={article_data}")
-    response = supabase.table("articles").insert(article_data).execute()
-    if response.data and len(response.data) > 0:
-        result = _attach_error_message(response.data[0])
-        print(f"[create_article] 記事作成完了: id={result.get('id')}, status={result.get('status')}")
-        return result
-    raise Exception("Failed to create article")
+    print(f"[create_article] 記事作成開始: status={status}, article_data={article_data}")
+    print(f"[create_article] 送信するstatus値: '{status}' (型: {type(status)})")
+    
+    try:
+        response = supabase.table("articles").insert(article_data).execute()
+        print(f"[create_article] Supabaseレスポンス: {response}")
+        
+        if response.data and len(response.data) > 0:
+            raw_result = response.data[0]
+            print(f"[create_article] 生データ: {raw_result}")
+            print(f"[create_article] 生データのstatus: '{raw_result.get('status')}' (型: {type(raw_result.get('status'))})")
+            
+            result = _attach_error_message(raw_result)
+            print(f"[create_article] 記事作成完了: id={result.get('id')}, status={result.get('status')}")
+            
+            # データベースから直接再取得して確認
+            article_id = result.get('id')
+            if article_id:
+                verify_response = supabase.table("articles").select("id, status").eq("id", article_id).limit(1).execute()
+                if verify_response.data and len(verify_response.data) > 0:
+                    verified_status = verify_response.data[0].get('status')
+                    print(f"[create_article] データベースから直接確認: status='{verified_status}'")
+                    if verified_status != status:
+                        print(f"[create_article] ⚠️ 警告: データベースのstatusが期待値と異なります。期待: '{status}', 実際: '{verified_status}'")
+                        # 強制的に更新
+                        update_response = supabase.table("articles").update({"status": status}).eq("id", article_id).execute()
+                        if update_response.data:
+                            print(f"[create_article] 強制更新後のstatus: '{update_response.data[0].get('status')}'")
+                            result = _attach_error_message(update_response.data[0])
+            
+            return result
+        else:
+            print(f"[create_article] エラー: レスポンスデータが空です")
+            raise Exception("Failed to create article: No data returned")
+    except Exception as e:
+        print(f"[create_article] エラー発生: {str(e)}")
+        import traceback
+        print(f"[create_article] トレースバック:\n{traceback.format_exc()}")
+        raise
 
 
 def update_article(article_id: str, user_id: str, updates: Dict) -> Optional[Dict]:
