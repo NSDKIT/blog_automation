@@ -162,7 +162,15 @@ async def create_article_endpoint(
     # 別スレッドで実行（非同期、daemon=Trueでメインスレッド終了時に自動終了）
     thread = threading.Thread(target=run_analyze_task, daemon=True)
     thread.start()
-    print(f"[create_article_endpoint] 別スレッドでキーワード分析タスクを開始しました（スレッドID: {thread.ident}）")
+    print(f"[create_article_endpoint] 別スレッドでキーワード分析タスクを開始しました（スレッドID: {thread.ident}, スレッド名: {thread.name}, 生存中: {thread.is_alive()})")
+    
+    # スレッドが正常に開始されたか確認（少し待ってから）
+    import time
+    time.sleep(0.1)
+    if thread.is_alive():
+        print(f"[create_article_endpoint] ✓ スレッドは正常に実行中です")
+    else:
+        print(f"[create_article_endpoint] ⚠️ 警告: スレッドが既に終了しています")
     
     # FastAPIのBackgroundTasksにも追加（念のため）
     try:

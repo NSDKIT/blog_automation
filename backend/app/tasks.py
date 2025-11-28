@@ -127,7 +127,9 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         article_data: 記事データ
         user_id: ユーザーID（オプション、指定されない場合は記事から取得）
     """
-    print(f"[analyze_keywords_task] 開始: article_id={article_id}, user_id={user_id}")
+    print(f"[analyze_keywords_task] ========== 開始 ==========")
+    print(f"[analyze_keywords_task] article_id={article_id}, user_id={user_id}")
+    print(f"[analyze_keywords_task] article_data={article_data}")
     try:
         # 記事を取得してuser_idを確認
         from app.supabase_client import get_supabase_client
@@ -173,8 +175,11 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         # ステータスチェック完了
         progress["status_check"] = True
         progress["current_step"] = "openai_generation"
-        update_article(article_id, user_id, {"keyword_analysis_progress": json.dumps(progress, ensure_ascii=False)})
+        update_result = update_article(article_id, user_id, {"keyword_analysis_progress": json.dumps(progress, ensure_ascii=False)})
         print(f"[analyze_keywords_task] ステータスチェック完了: keyword_analysis")
+        print(f"[analyze_keywords_task] 進捗状況更新結果: {update_result is not None}")
+        if update_result:
+            print(f"[analyze_keywords_task] 更新後の進捗状況: {update_result.get('keyword_analysis_progress')}")
         
         # OpenAIクライアントを取得
         from app.workflow import ArticleGenerator
@@ -216,8 +221,9 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
         # OpenAI生成完了
         progress["openai_generation"] = True
         progress["current_step"] = "dataforseo_fetch"
-        update_article(article_id, user_id, {"keyword_analysis_progress": json.dumps(progress, ensure_ascii=False)})
+        update_result = update_article(article_id, user_id, {"keyword_analysis_progress": json.dumps(progress, ensure_ascii=False)})
         print(f"[analyze_keywords_task] 生成されたキーワード数: {len(related_keywords_100)}")
+        print(f"[analyze_keywords_task] OpenAI生成完了 - 進捗状況更新結果: {update_result is not None}")
         
         # DataForSEOで検索ボリューム・競合度を取得（ハイブリッド方式）
         loop = asyncio.new_event_loop()
@@ -344,6 +350,7 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
             progress["scoring_completed"] = True
             progress["current_step"] = "completed"
             progress["error_message"] = None
+            print(f"[analyze_keywords_task] スコアリング完了: 進捗状況={progress}")
             
             # 全てのキーワードデータを保存（ユーザーが選択できるように）
             updates = {
@@ -352,8 +359,12 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
                 "keyword_analysis_progress": json.dumps(progress, ensure_ascii=False)
             }
             print(f"[analyze_keywords_task] ステータスを更新: keyword_selection, キーワード数: {len(scored_keywords)}")
-            update_article(article_id, user_id, updates)
-            print(f"[analyze_keywords_task] キーワード分析完了: {len(scored_keywords)}個のキーワードを分析しました")
+            update_result = update_article(article_id, user_id, updates)
+            print(f"[analyze_keywords_task] 更新結果: {update_result is not None}")
+            if update_result:
+                print(f"[analyze_keywords_task] 更新後のstatus: {update_result.get('status')}")
+                print(f"[analyze_keywords_task] 更新後の進捗状況: {update_result.get('keyword_analysis_progress')}")
+            print(f"[analyze_keywords_task] ========== キーワード分析完了 ==========: {len(scored_keywords)}個のキーワードを分析しました")
         finally:
             loop.close()
             
@@ -369,12 +380,27 @@ def analyze_keywords_task(article_id: str, article_data: Dict, user_id: str = No
                 article_response = supabase.table("articles").select("*").eq("id", article_id).limit(1).execute()
                 if article_response.data and len(article_response.data) > 0:
                     article = article_response.data[0]
+                    # 進捗状況を更新してエラーを記録
+                    progress = {
+                        "status_check": True,
+                        "openai_generation": False,
+                        "dataforseo_fetch": False,
+                        "scoring_completed": False,
+                        "current_step": "error",
+                        "error_message": error_message[:500]
+                    }
                     update_article(
                         article_id,
                         article.get("user_id"),
-                        {"status": "failed", "error_message": error_message[:1000]}
+                        {
+                            "status": "failed",
+                            "error_message": error_message[:1000],
+                            "keyword_analysis_progress": json.dumps(progress, ensure_ascii=False)
+                        }
                     )
-                    print(f"[analyze_keywords_task] エラーを記事に保存しました")
+                    print(f"[analyze_keywords_task] エラーを記事に保存しました: {error_message[:100]}")
         except Exception as update_error:
             print(f"[analyze_keywords_task] エラー保存に失敗: {str(update_error)}")
+            import traceback
+            print(f"[analyze_keywords_task] エラー保存のトレースバック:\n{traceback.format_exc()}")
         print(f"[analyze_keywords_task] キーワード分析エラー: {error_message}")
