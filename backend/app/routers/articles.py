@@ -90,7 +90,7 @@ async def create_article_endpoint(
         "current_step": "status_check",
         "error_message": None
     }
-    update_article(
+    updated_article = update_article(
         article.get("id"),
         str(current_user.get("id")),
         {
@@ -98,6 +98,35 @@ async def create_article_endpoint(
             "keyword_analysis_progress": json.dumps(initial_progress, ensure_ascii=False)
         }
     )
+    
+    # 更新後の記事データを取得（最新の状態を保証）
+    if updated_article:
+        article = updated_article
+        print(f"[create_article_endpoint] 進捗状況設定後の記事: status={article.get('status')}")
+    else:
+        # 更新に失敗した場合、最新の記事データを取得
+        article = get_article_by_id(article.get("id"), str(current_user.get("id")))
+        if not article:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="記事の取得に失敗しました"
+            )
+        print(f"[create_article_endpoint] 記事を再取得: status={article.get('status')}")
+    
+    # 最終的なステータス確認
+    if article.get("status") != "keyword_analysis":
+        print(f"[create_article_endpoint] 警告: 最終的なstatusがkeyword_analysisではありません。現在のstatus: {article.get('status')}。強制的に更新します。")
+        article = update_article(
+            article.get("id"),
+            str(current_user.get("id")),
+            {"status": "keyword_analysis"}
+        )
+        if not article:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="記事のステータス更新に失敗しました"
+            )
+        print(f"[create_article_endpoint] 最終的なステータス更新完了: status={article.get('status')}")
     
     # 履歴を記録
     create_article_history(
@@ -155,7 +184,14 @@ async def create_article_endpoint(
         ip_address=get_client_ip(request)
     )
     
-    return article
+    # 最終確認: レスポンスを返す前に、最新の記事データを取得
+    final_article = get_article_by_id(article.get("id"), str(current_user.get("id")))
+    if final_article:
+        print(f"[create_article_endpoint] 最終レスポンス: status={final_article.get('status')}")
+        return final_article
+    else:
+        print(f"[create_article_endpoint] 警告: 最終的な記事取得に失敗しました。既存のarticleを返します。")
+        return article
 
 
 @router.put(
