@@ -37,6 +37,10 @@ jobs:
             exit 1
           fi
           echo "Deploying to Heroku app: $HEROKU_APP_NAME"
+          # Git認証情報を設定
+          git config --global url."https://:$HEROKU_API_KEY@git.heroku.com/".insteadOf "https://git.heroku.com/"
+          # Herokuリモートを設定
           heroku git:remote -a "$HEROKU_APP_NAME"
+          # デプロイ
           git push heroku HEAD:main --force
 
