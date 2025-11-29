@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi import Request
-from app.routers import auth as auth_router, articles as articles_router, settings as settings_router, images as images_router, options as options_router, keyword_data as keyword_data_router
+from app.routers import auth as auth_router, articles as articles_router, settings as settings_router, images as images_router, options as options_router, keyword_data as keyword_data_router, serp_analysis as serp_analysis_router
 from app.config import settings as app_settings
 import os
 
@@ -59,6 +59,7 @@ app.include_router(settings_router.router, prefix="/api/settings", tags=["設定
 app.include_router(images_router.router, prefix="/api/images", tags=["画像"])
 app.include_router(options_router.router, prefix="/api/options", tags=["選択肢"])
 app.include_router(keyword_data_router.router, prefix="/api/keyword-data", tags=["キーワードデータ"])
+app.include_router(serp_analysis_router.router, prefix="/api/serp-analysis", tags=["SERP分析"])
 
 
 @app.get("/")
