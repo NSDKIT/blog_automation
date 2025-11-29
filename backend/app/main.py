@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
+from fastapi import Request
 from app.routers import auth as auth_router, articles as articles_router, settings as settings_router, images as images_router, options as options_router
 from app.config import settings as app_settings
+import os
 
 # データベーステーブルはSupabaseで管理（SQLスクリプトで作成済み）
 
@@ -12,7 +15,6 @@ app = FastAPI(
 )
 
 # CORS設定
-import os
 cors_origins = app_settings.cors_origins
 # 環境変数から直接読み込む（フォールバック）
 if not cors_origins or len(cors_origins) == 0:
@@ -20,13 +22,35 @@ if not cors_origins or len(cors_origins) == 0:
     cors_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
 
 print(f"[CORS] Allowed origins: {cors_origins}")  # デバッグ用
+
+# CORSミドルウェアを追加（ルーター登録の前が重要）
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
+
+# OPTIONSリクエストを明示的に処理（念のため）
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    """OPTIONSリクエストを明示的に処理"""
+    origin = request.headers.get("origin")
+    if origin in cors_origins:
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "3600",
+            }
+        )
+    return Response(status_code=200)
 
 # ルーターを登録
 app.include_router(auth_router.router, prefix="/api/auth", tags=["認証"])
