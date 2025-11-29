@@ -46,10 +46,15 @@ async def analyze_keyword_data(
     # 認証ヘッダーを生成
     auth_header = _get_auth_header(config["login"], config["password"])
     
+    # デバッグ用ログ（認証情報は含めない）
+    print(f"[keyword_data] 認証情報を使用: login={config['login'][:10]}... (認証ヘッダー長: {len(auth_header)})")
+    
     headers = {
         'Authorization': auth_header,
         'Content-Type': 'application/json'
     }
+    
+    print(f"[keyword_data] リクエストヘッダー: {headers}")
     
     # リクエストデータを準備（提供されたコードをベースに）
     requests_data = [
@@ -85,22 +90,41 @@ async def analyze_keyword_data(
     # 各APIを呼び出し
     for req in requests_data:
         try:
+            print(f"[keyword_data] API呼び出し: {req['name']} - {req['url']}")
+            print(f"[keyword_data] Payload: {req['payload']}")
             response = requests.post(req["url"], headers=headers, data=req["payload"], timeout=120)
+            print(f"[keyword_data] レスポンス Status: {response.status_code}")
+            
             results[req["name"]] = {
                 "url": req["url"],
                 "payload": req["payload"],
                 "status_code": response.status_code,
                 "response_text": response.text,
-                "response_json": None
+                "response_json": None,
+                "headers_used": {
+                    "Authorization": auth_header[:20] + "..." if len(auth_header) > 20 else auth_header,
+                    "Content-Type": headers["Content-Type"]
+                }
             }
             
             # JSONレスポンスをパース（可能な場合）
             try:
-                results[req["name"]]["response_json"] = response.json()
+                response_json = response.json()
+                results[req["name"]]["response_json"] = response_json
+                
+                # エラーステータスコードをチェック
+                if isinstance(response_json, dict):
+                    tasks = response_json.get("tasks", [])
+                    if tasks and len(tasks) > 0:
+                        task_status = tasks[0].get("status_code")
+                        task_message = tasks[0].get("status_message", "")
+                        if task_status and task_status != 20000:
+                            print(f"[keyword_data] APIエラー: status_code={task_status}, message={task_message}")
             except:
                 pass
                 
         except Exception as e:
+            print(f"[keyword_data] API呼び出しエラー: {req['name']} - {str(e)}")
             results[req["name"]] = {
                 "url": req["url"],
                 "payload": req["payload"],
