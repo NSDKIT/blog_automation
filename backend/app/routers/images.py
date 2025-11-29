@@ -39,13 +39,13 @@ async def get_user_images(
     dependencies=[Depends(rate_limit(limit=20, window_seconds=60))]
 )
 async def create_user_image_endpoint(
+    request: Request,
     image_data: UserImageCreate = None,
     keyword: str = Form(None),
     image_url: str = Form(None),
     alt_text: Optional[str] = Form(None),
     file: UploadFile = File(None),
-    current_user: dict = Depends(get_current_user),
-    request: Request
+    current_user: dict = Depends(get_current_user)
 ):
     """新規画像を登録（URLまたはファイルアップロード）"""
     user_id = str(current_user.get("id"))
