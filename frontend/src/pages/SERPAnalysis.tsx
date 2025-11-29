@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { analyzeSERP, SERPResult } from '../api/serp'
+import { analyzeSERP } from '../api/serp'
 
 export default function SERPAnalysis() {
   const [keyword, setKeyword] = useState('')
