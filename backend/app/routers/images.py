@@ -44,8 +44,8 @@ async def create_user_image_endpoint(
     image_url: str = Form(None),
     alt_text: Optional[str] = Form(None),
     file: UploadFile = File(None),
-    request: Request,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    request: Request
 ):
     """新規画像を登録（URLまたはファイルアップロード）"""
     user_id = str(current_user.get("id"))
