@@ -101,5 +101,9 @@ export const articlesApi = {
     })
     return response.data
   },
+  startKeywordAnalysis: async (id: string) => {
+    const response = await apiClient.post(`/articles/${id}/start-keyword-analysis`)
+    return response.data
+  },
 }
 

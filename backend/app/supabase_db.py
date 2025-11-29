@@ -148,7 +148,7 @@ def get_article_by_id(article_id: str, user_id: str) -> Optional[Dict]:
     return None
 
 
-def create_article(user_id: str, keyword: str, target: str, article_type: str, status: str = "keyword_analysis") -> Dict:
+def create_article(user_id: str, keyword: str, target: str, article_type: str, status: str = "draft") -> Dict:
     """新規記事を作成"""
     supabase = get_supabase()
     article_data = {

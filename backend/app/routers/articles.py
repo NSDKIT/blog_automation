@@ -55,78 +55,15 @@ async def create_article_endpoint(
     current_user: dict = Depends(get_current_user)
 ):
     # 記事レコードを作成
-    print(f"[create_article_endpoint] 記事作成開始: keyword={article_data.keyword}, status=keyword_analysis")
+    print(f"[create_article_endpoint] 記事作成開始: keyword={article_data.keyword}, status=draft")
     article = create_article(
         user_id=str(current_user.get("id")),
         keyword=article_data.keyword,
         target=article_data.target,
         article_type=article_data.article_type,
-        status="keyword_analysis"  # キーワード分析待ちのステータス
+        status="draft"  # 下書き状態で作成（キーワード分析は別タブで実行）
     )
     print(f"[create_article_endpoint] 記事作成完了: id={article.get('id')}, status={article.get('status')}")
-    
-    # ステータスが正しく設定されているか確認し、必要に応じて再設定
-    import json
-    if article.get("status") != "keyword_analysis":
-        print(f"[create_article_endpoint] 警告: 記事作成時のstatusがkeyword_analysisではありません。現在のstatus: {article.get('status')}。keyword_analysisに更新します。")
-        article = update_article(
-            article.get("id"),
-            str(current_user.get("id")),
-            {"status": "keyword_analysis"}
-        )
-        if not article:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="記事のステータス更新に失敗しました"
-            )
-        print(f"[create_article_endpoint] ステータス更新完了: status={article.get('status')}")
-    
-    # 初期進捗状況を設定
-    initial_progress = {
-        "status_check": False,
-        "openai_generation": False,
-        "dataforseo_fetch": False,
-        "scoring_completed": False,
-        "current_step": "status_check",
-        "error_message": None
-    }
-    updated_article = update_article(
-        article.get("id"),
-        str(current_user.get("id")),
-        {
-            "status": "keyword_analysis",  # 念のため再度設定
-            "keyword_analysis_progress": json.dumps(initial_progress, ensure_ascii=False)
-        }
-    )
-    
-    # 更新後の記事データを取得（最新の状態を保証）
-    if updated_article:
-        article = updated_article
-        print(f"[create_article_endpoint] 進捗状況設定後の記事: status={article.get('status')}")
-    else:
-        # 更新に失敗した場合、最新の記事データを取得
-        article = get_article_by_id(article.get("id"), str(current_user.get("id")))
-        if not article:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="記事の取得に失敗しました"
-            )
-        print(f"[create_article_endpoint] 記事を再取得: status={article.get('status')}")
-    
-    # 最終的なステータス確認
-    if article.get("status") != "keyword_analysis":
-        print(f"[create_article_endpoint] 警告: 最終的なstatusがkeyword_analysisではありません。現在のstatus: {article.get('status')}。強制的に更新します。")
-        article = update_article(
-            article.get("id"),
-            str(current_user.get("id")),
-            {"status": "keyword_analysis"}
-        )
-        if not article:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="記事のステータス更新に失敗しました"
-            )
-        print(f"[create_article_endpoint] 最終的なステータス更新完了: status={article.get('status')}")
     
     # 履歴を記録
     create_article_history(
@@ -135,56 +72,9 @@ async def create_article_endpoint(
         changes={"keyword": article_data.keyword, "target": article_data.target}
     )
     
-    # バックグラウンドでキーワード分析を開始（別スレッドで実行して確実に実行されるように）
-    from app.tasks import analyze_keywords_task
-    import traceback
-    import threading
+    # キーワード分析は自動実行しない（別タブで手動実行）
+    print(f"[create_article_endpoint] 記事作成完了: キーワード分析は「キーワード分析」タブで実行してください")
     
-    print(f"[create_article_endpoint] キーワード分析タスクを開始: article_id={article.get('id')}, status={article.get('status')}")
-    
-    # 記事のステータスを確認
-    article_check = get_article_by_id(article.get("id"), str(current_user.get("id")))
-    print(f"[create_article_endpoint] 記事確認: status={article_check.get('status') if article_check else 'None'}")
-    
-    # 別スレッドで実行（確実に実行されるように）
-    def run_analyze_task():
-        try:
-            print(f"[create_article_endpoint] 別スレッドでキーワード分析タスクを開始")
-            analyze_keywords_task(
-                article_id=article.get("id"),
-                article_data=article_data.dict(),
-                user_id=str(current_user.get("id"))
-            )
-        except Exception as e:
-            print(f"[create_article_endpoint] 別スレッドでのタスク実行エラー: {str(e)}")
-            print(f"[create_article_endpoint] トレースバック:\n{traceback.format_exc()}")
-    
-    # 別スレッドで実行（非同期、daemon=Trueでメインスレッド終了時に自動終了）
-    thread = threading.Thread(target=run_analyze_task, daemon=True)
-    thread.start()
-    print(f"[create_article_endpoint] 別スレッドでキーワード分析タスクを開始しました（スレッドID: {thread.ident}, スレッド名: {thread.name}, 生存中: {thread.is_alive()})")
-    
-    # スレッドが正常に開始されたか確認（少し待ってから）
-    import time
-    time.sleep(0.1)
-    if thread.is_alive():
-        print(f"[create_article_endpoint] ✓ スレッドは正常に実行中です")
-    else:
-        print(f"[create_article_endpoint] ⚠️ 警告: スレッドが既に終了しています")
-    
-    # FastAPIのBackgroundTasksにも追加（念のため）
-    try:
-        background_tasks.add_task(
-            analyze_keywords_task,
-            article_id=article.get("id"),
-            article_data=article_data.dict(),
-            user_id=str(current_user.get("id"))
-        )
-        print(f"[create_article_endpoint] キーワード分析タスクをBackgroundTasksにも追加しました")
-    except Exception as e:
-        print(f"[create_article_endpoint] BackgroundTasks追加エラー: {str(e)}")
-        print(f"[create_article_endpoint] トレースバック:\n{traceback.format_exc()}")
-        # エラーが発生した場合でも、別スレッドで実行されているので問題なし
     create_audit_log(
         user_id=str(current_user.get("id")),
         action="article_created",
@@ -192,36 +82,7 @@ async def create_article_endpoint(
         ip_address=get_client_ip(request)
     )
     
-    # 最終確認: レスポンスを返す前に、最新の記事データを取得
-    final_article = get_article_by_id(article.get("id"), str(current_user.get("id")))
-    if final_article:
-        final_status = final_article.get('status')
-        print(f"[create_article_endpoint] 最終レスポンス: status={final_status}")
-        
-        # 最終的なstatusがkeyword_analysisでない場合、強制的に更新
-        if final_status != "keyword_analysis":
-            print(f"[create_article_endpoint] ⚠️ 重大な警告: 最終的なstatusがkeyword_analysisではありません。現在のstatus: '{final_status}'。強制的に更新します。")
-            force_updated = update_article(
-                article.get("id"),
-                str(current_user.get("id")),
-                {"status": "keyword_analysis"}
-            )
-            if force_updated:
-                final_article = force_updated
-                print(f"[create_article_endpoint] 強制更新後のstatus: {final_article.get('status')}")
-            else:
-                # 更新に失敗した場合、データベースから直接取得
-                from app.supabase_client import get_supabase_client
-                supabase = get_supabase_client()
-                if supabase:
-                    direct_check = supabase.table("articles").select("id, status").eq("id", article.get("id")).limit(1).execute()
-                    if direct_check.data:
-                        print(f"[create_article_endpoint] データベースから直接確認: status={direct_check.data[0].get('status')}")
-        
-        return final_article
-    else:
-        print(f"[create_article_endpoint] 警告: 最終的な記事取得に失敗しました。既存のarticleを返します。")
-        return article
+    return article
 
 
 @router.put(
@@ -417,6 +278,115 @@ async def publish_article_endpoint(
 
 class KeywordSelection(BaseModel):
     selected_keywords: List[str]
+
+
+@router.post(
+    "/{article_id}/start-keyword-analysis",
+    dependencies=[Depends(rate_limit(limit=10, window_seconds=60))]
+)
+async def start_keyword_analysis_endpoint(
+    article_id: UUID,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    キーワード分析を手動で開始
+    """
+    from app.tasks import analyze_keywords_task
+    import json
+    import traceback
+    import threading
+    
+    article = get_article_by_id(str(article_id), str(current_user.get("id")))
+    
+    if not article:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="記事が見つかりません"
+        )
+    
+    # 既にキーワード分析が完了している場合はエラー
+    if article.get("status") == "keyword_selection":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="キーワード分析は既に完了しています"
+        )
+    
+    # 既にキーワード分析中の場合はエラー
+    if article.get("status") == "keyword_analysis":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="キーワード分析は既に実行中です"
+        )
+    
+    # 記事データを準備
+    article_data = {
+        "keyword": article.get("keyword"),
+        "target": article.get("target"),
+        "article_type": article.get("article_type"),
+        "important_keyword1": None,
+        "important_keyword2": None,
+        "important_keyword3": None,
+        "secondary_keywords": []
+    }
+    
+    # ステータスをkeyword_analysisに更新
+    initial_progress = {
+        "status_check": False,
+        "openai_generation": False,
+        "dataforseo_fetch": False,
+        "scoring_completed": False,
+        "current_step": "status_check",
+        "error_message": None
+    }
+    update_article(
+        str(article_id),
+        str(current_user.get("id")),
+        {
+            "status": "keyword_analysis",
+            "keyword_analysis_progress": json.dumps(initial_progress, ensure_ascii=False)
+        }
+    )
+    
+    # バックグラウンドでキーワード分析を開始
+    print(f"[start_keyword_analysis_endpoint] キーワード分析タスクを開始: article_id={article_id}")
+    
+    def run_analyze_task():
+        try:
+            print(f"[start_keyword_analysis_endpoint] 別スレッドでキーワード分析タスクを開始")
+            analyze_keywords_task(
+                article_id=str(article_id),
+                article_data=article_data,
+                user_id=str(current_user.get("id"))
+            )
+        except Exception as e:
+            print(f"[start_keyword_analysis_endpoint] 別スレッドでのタスク実行エラー: {str(e)}")
+            print(f"[start_keyword_analysis_endpoint] トレースバック:\n{traceback.format_exc()}")
+    
+    # 別スレッドで実行
+    thread = threading.Thread(target=run_analyze_task, daemon=True)
+    thread.start()
+    print(f"[start_keyword_analysis_endpoint] 別スレッドでキーワード分析タスクを開始しました（スレッドID: {thread.ident})")
+    
+    # FastAPIのBackgroundTasksにも追加
+    try:
+        background_tasks.add_task(
+            analyze_keywords_task,
+            article_id=str(article_id),
+            article_data=article_data,
+            user_id=str(current_user.get("id"))
+        )
+        print(f"[start_keyword_analysis_endpoint] キーワード分析タスクをBackgroundTasksにも追加しました")
+    except Exception as e:
+        print(f"[start_keyword_analysis_endpoint] BackgroundTasks追加エラー: {str(e)}")
+        print(f"[start_keyword_analysis_endpoint] トレースバック:\n{traceback.format_exc()}")
+    
+    return {
+        "message": "キーワード分析を開始しました",
+        "article_id": str(article_id),
+        "status": "keyword_analysis"
+    }
 
 
 @router.post(
