@@ -9,9 +9,10 @@ interface KeywordDataResult {
     [key: string]: {
       url: string
       payload: string
-      status_code?: number
+      headers?: { [key: string]: string }
       response_text?: string
       response_json?: any
+      http_status_code?: number
       error?: string
     }
   }
@@ -125,14 +126,25 @@ export default function KeywordDataAnalysis() {
                         {data.payload}
                       </pre>
                     </div>
-                    {data.status_code && (
+                    {data.headers && (
                       <div>
-                        <strong className="text-gray-700">Status Code:</strong>
+                        <strong className="text-gray-700">Headers:</strong>
+                        <pre className="bg-gray-50 p-2 rounded text-xs overflow-x-auto mt-1">
+                          {JSON.stringify(data.headers, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                    {data.http_status_code !== undefined && (
+                      <div>
+                        <strong className="text-gray-700">HTTP Status Code:</strong>
                         <span className={`ml-2 ${
-                          data.status_code === 200 ? 'text-green-600' : 'text-red-600'
+                          data.http_status_code === 200 ? 'text-green-600' : 'text-yellow-600'
                         }`}>
-                          {data.status_code}
+                          {data.http_status_code}
                         </span>
+                        <p className="text-xs text-gray-500 mt-1">
+                          (注: DataForSEO APIは認証成功時でも402を返す場合があります。レスポンス内のstatus_codeを確認してください)
+                        </p>
                       </div>
                     )}
                     {data.error && (

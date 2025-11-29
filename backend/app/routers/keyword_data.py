@@ -87,24 +87,21 @@ async def analyze_keyword_data(
     
     results = {}
     
-    # 各APIを呼び出し
+    # 各APIを呼び出し（提供されたKeywordDataAPI.pyと同じ形式で）
     for req in requests_data:
         try:
             print(f"[keyword_data] API呼び出し: {req['name']} - {req['url']}")
             print(f"[keyword_data] Payload: {req['payload']}")
             response = requests.post(req["url"], headers=headers, data=req["payload"], timeout=120)
-            print(f"[keyword_data] レスポンス Status: {response.status_code}")
+            print(f"[keyword_data] レスポンス HTTP Status: {response.status_code}")
             
+            # 提供されたKeywordDataAPI.pyと同じ形式で結果を保存
             results[req["name"]] = {
                 "url": req["url"],
                 "payload": req["payload"],
-                "status_code": response.status_code,
-                "response_text": response.text,
-                "response_json": None,
-                "headers_used": {
-                    "Authorization": auth_header[:20] + "..." if len(auth_header) > 20 else auth_header,
-                    "Content-Type": headers["Content-Type"]
-                }
+                "headers": dict(headers),  # 提供されたコードと同じ形式
+                "response_text": response.text,  # 提供されたコードと同じ形式
+                "http_status_code": response.status_code,  # HTTPステータスコード（追加情報）
             }
             
             # JSONレスポンスをパース（可能な場合）
@@ -129,7 +126,7 @@ async def analyze_keyword_data(
                 "url": req["url"],
                 "payload": req["payload"],
                 "error": str(e),
-                "status_code": None,
+                "http_status_code": None,
                 "response_text": None,
                 "response_json": None
             }
