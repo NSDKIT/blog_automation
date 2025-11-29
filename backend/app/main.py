@@ -12,7 +12,13 @@ app = FastAPI(
 )
 
 # CORS設定
+import os
 cors_origins = app_settings.cors_origins
+# 環境変数から直接読み込む（フォールバック）
+if not cors_origins or len(cors_origins) == 0:
+    env_origins = os.getenv("CORS_ORIGINS", "https://blog-automation-nu.vercel.app,http://localhost:3000,http://localhost:5173")
+    cors_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
+
 print(f"[CORS] Allowed origins: {cors_origins}")  # デバッグ用
 app.add_middleware(
     CORSMiddleware,

@@ -42,16 +42,19 @@ class Settings(BaseSettings):
     dataforseo_password: str = ""
     
     # CORS (文字列として受け取り、後でsplit)
+    # 環境変数CORS_ORIGINSまたはCORS_ORIGINS_STRから読み込む
     cors_origins_str: str = "http://localhost:3000,http://localhost:5173,https://blog-automation-nu.vercel.app"
     
     @property
     def cors_origins(self) -> List[str]:
         """CORS originsをリストとして返す"""
-        origins = [origin.strip() for origin in self.cors_origins_str.split(",") if origin.strip()]
-        # 環境変数からも読み込む（優先）
-        env_origins = os.getenv("CORS_ORIGINS", "")
+        # 環境変数から読み込む（優先）
+        env_origins = os.getenv("CORS_ORIGINS") or os.getenv("CORS_ORIGINS_STR", "")
         if env_origins:
             origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
+        else:
+            # デフォルト値を使用
+            origins = [origin.strip() for origin in self.cors_origins_str.split(",") if origin.strip()]
         return origins
     
     class Config:
