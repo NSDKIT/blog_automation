@@ -24,8 +24,10 @@ export default function KeywordDataAnalysis() {
 
   const analyzeMutation = useMutation({
     mutationFn: async (data: { keyword: string; location_code: number }) => {
+      // FastAPIでは、POSTリクエストでもクエリパラメータを使用可能
       const response = await apiClient.post<KeywordDataResult>(
-        `/keyword-data/analyze?keyword=${encodeURIComponent(data.keyword)}&location_code=${data.location_code}`
+        `/keyword-data/analyze?keyword=${encodeURIComponent(data.keyword)}&location_code=${data.location_code}`,
+        {}
       )
       return response.data
     },
