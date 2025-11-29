@@ -195,7 +195,7 @@ class ArticleGenerator:
                     "serp_analysis": serp_analysis
                 }
             else:
-            analysis = self._analyze_articles(google_results)
+                analysis = self._analyze_articles(google_results)
             
             # サブトピック生成
             try:
