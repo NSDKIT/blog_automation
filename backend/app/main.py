@@ -12,9 +12,11 @@ app = FastAPI(
 )
 
 # CORS設定
+cors_origins = app_settings.cors_origins
+print(f"[CORS] Allowed origins: {cors_origins}")  # デバッグ用
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=app_settings.cors_origins,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
