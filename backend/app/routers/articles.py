@@ -781,3 +781,21 @@ async def publish_article_to_wordpress_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"WordPress投稿エラー: {str(e)}"
         )
+
+
+# 注意: /{article_id} は最後に定義する必要があります
+# より具体的なパス（/{article_id}/...）が先にマッチするように
+@router.get("/{article_id}", response_model=ArticleResponse)
+async def get_article(
+    article_id: UUID,
+    current_user: dict = Depends(get_current_user)
+):
+    article = get_article_by_id(str(article_id), str(current_user.get("id")))
+    
+    if not article:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="記事が見つかりません"
+        )
+    
+    return article
