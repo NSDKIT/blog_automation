@@ -19,7 +19,11 @@ jobs:
         env:
           HEROKU_API_KEY: ${{secrets.HEROKU_API_KEY}}
         run: |
-          echo "$HEROKU_API_KEY" | heroku login --interactive
+          mkdir -p ~/.netrc
+          echo "machine api.heroku.com" >> ~/.netrc
+          echo "  login ${{secrets.HEROKU_EMAIL}}" >> ~/.netrc
+          echo "  password $HEROKU_API_KEY" >> ~/.netrc
+          chmod 600 ~/.netrc
       
       - name: Deploy to Heroku
         env:
@@ -27,6 +31,11 @@ jobs:
           HEROKU_APP_NAME: ${{secrets.HEROKU_APP_NAME}}
         working-directory: backend
         run: |
-          heroku git:remote -a $HEROKU_APP_NAME
+          if [ -z "$HEROKU_APP_NAME" ]; then
+            echo "Error: HEROKU_APP_NAME is not set"
+            exit 1
+          fi
+          echo "Deploying to Heroku app: $HEROKU_APP_NAME"
+          heroku git:remote -a "$HEROKU_APP_NAME"
           git push heroku HEAD:main --force
 
