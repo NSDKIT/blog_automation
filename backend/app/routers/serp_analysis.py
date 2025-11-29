@@ -203,8 +203,369 @@ def extract_faq_items(serp_data: Dict) -> List[Dict]:
     return faq_items[:10]  # 最大10件
 
 
-def analyze_serp_for_seo(serp_data: Dict) -> Dict:
-    """SERPデータをSEO対策向けに分析"""
+def extract_related_keywords(serp_data: Dict, keyword: str) -> Dict:
+    """関連キーワードを抽出（Phase 2）"""
+    if not serp_data:
+        return {}
+    
+    items = serp_data.get("items", [])
+    related_keywords = []
+    
+    # Related Searchesから抽出
+    for item in items:
+        if item.get("type") == "related_searches":
+            searches = item.get("items", [])
+            for s in searches:
+                query = s.get("text", "")
+                if query and query != keyword:
+                    related_keywords.append({
+                        "keyword": query,
+                        "type": "related_search",
+                        "priority": "high" if len(query.split()) <= 3 else "medium"
+                    })
+    
+    # タイトルからも関連キーワードを抽出
+    organic_items = [item for item in items if item.get("type") == "organic"]
+    title_keywords = []
+    for item in organic_items[:10]:
+        title = item.get("title", "")
+        # タイトルから重要な単語を抽出
+        words = re.findall(r'\b\w+\b', title)
+        for word in words:
+            if len(word) >= 2 and word not in ["の", "は", "を", "に", "が", "と", "で", "も", "から", "まで"]:
+                if word not in [kw["keyword"] for kw in related_keywords]:
+                    title_keywords.append(word)
+    
+    # 頻度でソート
+    keyword_counter = Counter(title_keywords)
+    for word, count in keyword_counter.most_common(10):
+        related_keywords.append({
+            "keyword": word,
+            "type": "title_extraction",
+            "priority": "medium",
+            "frequency": count
+        })
+    
+    return {
+        "related_keywords": related_keywords[:20],  # 最大20件
+        "total_count": len(related_keywords)
+    }
+
+
+def analyze_keyword_density(serp_data: Dict, keyword: str) -> Dict:
+    """キーワード密度を分析（Phase 2）"""
+    if not serp_data:
+        return {}
+    
+    items = serp_data.get("items", [])
+    organic_items = [item for item in items if item.get("type") == "organic"]
+    
+    keyword_densities = []
+    keyword_positions = []
+    
+    for item in organic_items[:10]:  # 上位10件を分析
+        title = item.get("title", "")
+        snippet = item.get("snippet", "")
+        text = f"{title} {snippet}"
+        
+        # キーワードの出現回数
+        keyword_count = text.lower().count(keyword.lower())
+        total_words = len(text.split())
+        density = (keyword_count / total_words * 100) if total_words > 0 else 0
+        
+        # キーワードの位置（タイトル内かどうか）
+        in_title = keyword.lower() in title.lower()
+        in_snippet = keyword.lower() in snippet.lower()
+        
+        keyword_densities.append(density)
+        keyword_positions.append({
+            "in_title": in_title,
+            "in_snippet": in_snippet,
+            "density": round(density, 2)
+        })
+    
+    avg_density = sum(keyword_densities) / len(keyword_densities) if keyword_densities else 0
+    
+    return {
+        "average_density": round(avg_density, 2),
+        "recommended_density": {
+            "min": max(0.5, avg_density * 0.8),
+            "max": min(2.5, avg_density * 1.2)
+        },
+        "keyword_positions": keyword_positions,
+        "recommendation": "タイトルと最初の段落にキーワードを含めることを推奨します"
+    }
+
+
+def analyze_competitors(serp_data: Dict, keyword: str) -> Dict:
+    """競合記事を分析（Phase 3）"""
+    if not serp_data:
+        return {}
+    
+    items = serp_data.get("items", [])
+    organic_items = [item for item in items if item.get("type") == "organic"]
+    
+    competitor_analysis = []
+    all_topics = []
+    
+    for idx, item in enumerate(organic_items[:10], 1):
+        title = item.get("title", "")
+        snippet = item.get("snippet", "")
+        url = item.get("url", "")
+        
+        # 記事の特徴を抽出
+        features = []
+        if "おすすめ" in title or "ランキング" in title:
+            features.append("ランキング形式")
+        if "比較" in title:
+            features.append("比較記事")
+        if "選び方" in title or "方法" in title:
+            features.append("ガイド記事")
+        if "レビュー" in title or "口コミ" in title:
+            features.append("レビュー記事")
+        
+        # トピックを抽出（タイトルとスニペットから）
+        topics = []
+        if "価格" in title or "値段" in snippet:
+            topics.append("価格")
+        if "特徴" in title or "メリット" in snippet:
+            topics.append("特徴・メリット")
+        if "デメリット" in snippet or "注意点" in snippet:
+            topics.append("デメリット・注意点")
+        if "選び方" in title or "ポイント" in snippet:
+            topics.append("選び方")
+        
+        all_topics.extend(topics)
+        
+        competitor_analysis.append({
+            "position": idx,
+            "title": title,
+            "snippet": snippet[:200],  # 最初の200文字
+            "url": url,
+            "features": features,
+            "topics": topics,
+            "title_length": len(title),
+            "snippet_length": len(snippet)
+        })
+    
+    # 全記事でカバーされているトピック
+    topic_counter = Counter(all_topics)
+    common_topics = [topic for topic, count in topic_counter.items() if count >= 5]
+    rare_topics = [topic for topic, count in topic_counter.items() if count <= 2]
+    
+    return {
+        "competitors": competitor_analysis,
+        "common_topics": common_topics,  # 多くの記事でカバーされているトピック
+        "rare_topics": rare_topics,  # 少数の記事のみでカバーされているトピック
+        "content_gaps": rare_topics,  # コンテンツギャップ（差別化のチャンス）
+        "differentiation_strategy": {
+            "focus_areas": rare_topics[:3],  # 差別化すべきトピック
+            "must_include": common_topics[:5],  # 必ず含めるべきトピック
+            "recommendation": f"「{', '.join(rare_topics[:3])}」に焦点を当てることで差別化できます"
+        }
+    }
+
+
+def analyze_search_intent(serp_data: Dict) -> Dict:
+    """検索意図を分析（Phase 3）"""
+    if not serp_data:
+        return {}
+    
+    items = serp_data.get("items", [])
+    organic_items = [item for item in items if item.get("type") == "organic"]
+    
+    intent_signals = {
+        "informational": 0,  # 情報収集
+        "commercial": 0,  # 購買検討
+        "transactional": 0,  # 購入
+        "navigational": 0  # 特定サイトへのアクセス
+    }
+    
+    article_types = []
+    
+    for item in organic_items[:10]:
+        title = item.get("title", "")
+        snippet = item.get("snippet", "")
+        
+        # 検索意図の判定
+        if "とは" in title or "意味" in title or "定義" in title:
+            intent_signals["informational"] += 1
+            article_types.append("ガイド記事")
+        if "おすすめ" in title or "ランキング" in title or "比較" in title:
+            intent_signals["commercial"] += 1
+            article_types.append("比較・ランキング記事")
+        if "購入" in title or "買う" in title or "通販" in snippet:
+            intent_signals["transactional"] += 1
+            article_types.append("購入記事")
+        if "公式" in title or "サイト" in title:
+            intent_signals["navigational"] += 1
+    
+    # 最も多い検索意図を判定
+    dominant_intent = max(intent_signals, key=intent_signals.get)
+    intent_mapping = {
+        "informational": "情報収集",
+        "commercial": "購買検討",
+        "transactional": "購入",
+        "navigational": "特定サイトへのアクセス"
+    }
+    
+    article_type_counter = Counter(article_types)
+    recommended_type = article_type_counter.most_common(1)[0][0] if article_type_counter else "ガイド記事"
+    
+    return {
+        "dominant_intent": intent_mapping.get(dominant_intent, "情報収集"),
+        "intent_scores": intent_signals,
+        "recommended_article_type": recommended_type,
+        "confidence": max(intent_signals.values()) / sum(intent_signals.values()) * 100 if sum(intent_signals.values()) > 0 else 0
+    }
+
+
+def generate_prompt(seo_analysis: Dict, keyword: str) -> Dict:
+    """記事生成用のプロンプトを自動生成（Phase 4）"""
+    if not seo_analysis:
+        return {}
+    
+    headings = seo_analysis.get("headings_analysis", {})
+    titles = seo_analysis.get("titles_analysis", {})
+    faq = seo_analysis.get("faq_items", [])
+    keywords = seo_analysis.get("keyword_optimization", {})
+    competitors = seo_analysis.get("competitor_analysis", {})
+    intent = seo_analysis.get("search_intent", {})
+    
+    # 見出し構造テンプレート
+    h2_patterns = headings.get("h2_patterns", {})
+    recommended_headings = list(h2_patterns.keys())[:5]
+    
+    # FAQ項目
+    faq_questions = [item.get("question", "") for item in faq[:5]]
+    
+    # 推奨キーワード
+    related_kws = keywords.get("related_keywords", {}).get("related_keywords", [])
+    recommended_keywords = [kw.get("keyword", "") for kw in related_kws[:10]]
+    
+    # 差別化ポイント
+    diff_strategy = competitors.get("differentiation_strategy", {})
+    focus_areas = diff_strategy.get("focus_areas", [])
+    
+    prompt_template = f"""
+以下のSEO分析結果に基づいて、最高のSEO対策が施された記事を生成してください。
+
+【メインキーワード】
+{keyword}
+
+【推奨見出し構造】
+{chr(10).join([f"- {h}" for h in recommended_headings])}
+
+【含めるべきFAQ項目】
+{chr(10).join([f"- {q}" for q in faq_questions])}
+
+【推奨関連キーワード】
+{', '.join(recommended_keywords)}
+
+【差別化ポイント】
+{', '.join(focus_areas)}に焦点を当てて、競合記事との差別化を図ってください。
+
+【検索意図】
+{intent.get("dominant_intent", "情報収集")} - {intent.get("recommended_article_type", "ガイド記事")}形式で作成してください。
+
+【タイトル推奨】
+{titles.get("title_suggestions", [{}])[0].get("example", "") if titles.get("title_suggestions") else ""}
+"""
+    
+    return {
+        "prompt": prompt_template.strip(),
+        "recommended_headings": recommended_headings,
+        "faq_questions": faq_questions,
+        "recommended_keywords": recommended_keywords,
+        "focus_areas": focus_areas
+    }
+
+
+def suggest_structured_data(serp_data: Dict, faq_items: List[Dict]) -> Dict:
+    """構造化データの提案（Phase 4）"""
+    if not serp_data:
+        return {}
+    
+    items = serp_data.get("items", [])
+    
+    # Featured Snippetの有無を確認
+    has_featured_snippet = any(item.get("type") == "featured_snippet" for item in items)
+    
+    # FAQ構造化データの必要性
+    needs_faq_schema = len(faq_items) >= 3
+    
+    # Article構造化データの必要性
+    organic_items = [item for item in items if item.get("type") == "organic"]
+    needs_article_schema = len(organic_items) > 0
+    
+    suggestions = []
+    
+    if needs_faq_schema:
+        suggestions.append({
+            "type": "FAQPage",
+            "priority": "high",
+            "reason": "People Also Askが3件以上あるため、FAQ構造化データを推奨します",
+            "example": {
+                "@type": "FAQPage",
+                "mainEntity": [{"@type": "Question", "name": q.get("question", ""), "acceptedAnswer": {"@type": "Answer", "text": q.get("answer", "")}} for q in faq_items[:5]]
+            }
+        })
+    
+    if needs_article_schema:
+        suggestions.append({
+            "type": "Article",
+            "priority": "medium",
+            "reason": "記事コンテンツの構造化データを推奨します",
+            "example": {
+                "@type": "Article",
+                "headline": "記事タイトル",
+                "author": {"@type": "Person", "name": "著者名"},
+                "datePublished": "2025-01-01",
+                "dateModified": "2025-01-01"
+            }
+        })
+    
+    if has_featured_snippet:
+        suggestions.append({
+            "type": "HowTo",
+            "priority": "medium",
+            "reason": "Featured Snippetが表示されているため、HowTo構造化データを検討してください"
+        })
+    
+    return {
+        "suggestions": suggestions,
+        "has_featured_snippet": has_featured_snippet,
+        "needs_faq_schema": needs_faq_schema,
+        "needs_article_schema": needs_article_schema
+    }
+
+
+def analyze_device_differences(all_results: List[Dict]) -> Dict:
+    """デバイス別の違いを分析（Phase 4）"""
+    if not all_results or len(all_results) < 2:
+        return {}
+    
+    # デスクトップとモバイルの結果を比較
+    desktop_results = [r for r in all_results if "desktop" in r.get("url", "").lower()]
+    mobile_results = [r for r in all_results if "mobile" in r.get("url", "").lower()]
+    
+    if not desktop_results or not mobile_results:
+        return {}
+    
+    # 簡易的な比較（実際の実装では、SERPデータを詳細に比較）
+    return {
+        "has_differences": True,
+        "recommendation": "モバイルとデスクトップで検索結果が異なる可能性があります。モバイルファーストのSEO対策を推奨します。",
+        "mobile_optimization": [
+            "ページ読み込み速度の最適化",
+            "レスポンシブデザインの確認",
+            "モバイルでのユーザビリティ向上"
+        ]
+    }
+
+
+def analyze_serp_for_seo(serp_data: Dict, keyword: str) -> Dict:
+    """SERPデータをSEO対策向けに分析（全機能統合）"""
     if not serp_data:
         return {}
     
@@ -212,10 +573,39 @@ def analyze_serp_for_seo(serp_data: Dict) -> Dict:
     titles_analysis = analyze_titles(serp_data)
     faq_items = extract_faq_items(serp_data)
     
+    # Phase 2: キーワード最適化
+    keyword_optimization = {
+        "related_keywords": extract_related_keywords(serp_data, keyword),
+        "keyword_density": analyze_keyword_density(serp_data, keyword)
+    }
+    
+    # Phase 3: 競合分析
+    competitor_analysis = analyze_competitors(serp_data, keyword)
+    search_intent = analyze_search_intent(serp_data)
+    
+    # Phase 4: 統合機能
+    structured_data = suggest_structured_data(serp_data, faq_items)
+    
+    # プロンプト生成用のデータを準備
+    seo_data_for_prompt = {
+        "headings_analysis": headings_analysis,
+        "titles_analysis": titles_analysis,
+        "faq_items": faq_items,
+        "keyword_optimization": keyword_optimization,
+        "competitor_analysis": competitor_analysis,
+        "search_intent": search_intent
+    }
+    prompt_generation = generate_prompt(seo_data_for_prompt, keyword)
+    
     return {
         "headings_analysis": headings_analysis,
         "titles_analysis": titles_analysis,
-        "faq_items": faq_items
+        "faq_items": faq_items,
+        "keyword_optimization": keyword_optimization,
+        "competitor_analysis": competitor_analysis,
+        "search_intent": search_intent,
+        "structured_data": structured_data,
+        "prompt_generation": prompt_generation
     }
 
 
@@ -297,7 +687,7 @@ async def analyze_serp(
             # SERPデータを抽出してSEO分析
             serp_data = extract_serp_data(response_json)
             if serp_data:
-                seo_analysis = analyze_serp_for_seo(serp_data)
+                seo_analysis = analyze_serp_for_seo(serp_data, keyword)
             
         except:
             pass
