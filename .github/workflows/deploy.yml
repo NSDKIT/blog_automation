@@ -37,6 +37,8 @@ jobs:
             exit 1
           fi
           echo "Deploying to Heroku app: $HEROKU_APP_NAME"
+          # Shallow cloneを解除（完全な履歴を取得）
+          git fetch --all --unshallow || true
           # Git認証情報を設定
           git config --global url."https://:$HEROKU_API_KEY@git.heroku.com/".insteadOf "https://git.heroku.com/"
           # Herokuリモートを設定
