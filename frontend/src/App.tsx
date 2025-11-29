@@ -6,6 +6,7 @@ import ArticleNew from './pages/ArticleNew'
 import ArticleDetail from './pages/ArticleDetail'
 import KeywordSelection from './pages/KeywordSelection'
 import KeywordAnalysis from './pages/KeywordAnalysis'
+import KeywordDataAnalysis from './pages/KeywordDataAnalysis'
 import Settings from './pages/Settings'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/Layout'
@@ -69,6 +70,16 @@ function App() {
               <PrivateRoute>
                 <Layout>
                   <KeywordAnalysis />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/keyword-data-analysis"
+            element={
+              <PrivateRoute>
+                <Layout>
+                  <KeywordDataAnalysis />
                 </Layout>
               </PrivateRoute>
             }
