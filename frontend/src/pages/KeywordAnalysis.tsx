@@ -16,7 +16,7 @@ export default function KeywordAnalysis() {
   })
 
   // 選択された記事を取得
-  const { data: selectedArticle, isLoading: articleLoading } = useQuery({
+  const { data: selectedArticle } = useQuery({
     queryKey: ['article', selectedArticleId],
     queryFn: () => articlesApi.getArticle(selectedArticleId),
     enabled: !!selectedArticleId,
