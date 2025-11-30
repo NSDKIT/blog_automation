@@ -206,7 +206,7 @@ async def integrated_analysis(
                         async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
                             difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
                             difficulty_response = await difficulty_client.post(
-                                difficulty_url, headers=headers, content=difficulty_payload_json
+                                difficulty_url, headers=headers, data=difficulty_payload_json
                             )
                             difficulty_response.raise_for_status()
                             difficulty_result = difficulty_response.json()
@@ -236,7 +236,7 @@ async def integrated_analysis(
                     async with httpx.AsyncClient(timeout=120.0) as sv_client:
                         sv_payload_json = json.dumps(search_volume_payload, ensure_ascii=False)
                         sv_response = await sv_client.post(
-                            search_volume_url, headers=headers, content=sv_payload_json
+                            search_volume_url, headers=headers, data=sv_payload_json
                         )
                         sv_response.raise_for_status()
                         sv_result = sv_response.json()
@@ -343,7 +343,7 @@ async def integrated_analysis(
             async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
                 difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
                 difficulty_response = await difficulty_client.post(
-                    difficulty_url, headers=headers, content=difficulty_payload_json
+                    difficulty_url, headers=headers, data=difficulty_payload_json
                 )
                 difficulty_response.raise_for_status()
                 difficulty_result = difficulty_response.json()
