@@ -185,11 +185,11 @@ async def integrated_analysis(
                     # bulk_keyword_difficulty APIで難易度を一括取得
                     if related_keywords_list:
                         difficulty_url = f"{BASE_URL}/bulk_keyword_difficulty/live"
-                            difficulty_payload = [{
-                                "keywords": related_keywords_list,
-                                "location_code": location_code,
-                                "language_code": language_code
-                            }]
+                        difficulty_payload = [{
+                            "keywords": related_keywords_list,
+                            "location_code": location_code,
+                            "language_code": language_code
+                        }]
                         
                         async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
                             difficulty_response = await difficulty_client.post(
