@@ -141,7 +141,18 @@ export default function IntegratedAnalysis() {
     if (domainAnalytics?.results) {
       for (const result of domainAnalytics.results) {
         try {
-          const tasks = result.response_json?.tasks
+          // response_jsonが存在しない場合は、response_textをパース
+          let responseJson = result.response_json
+          if (!responseJson && result.response_text) {
+            try {
+              responseJson = JSON.parse(result.response_text)
+            } catch (parseError) {
+              console.warn('Failed to parse response_text:', parseError)
+              continue
+            }
+          }
+          
+          const tasks = responseJson?.tasks
           if (tasks && tasks.length > 0) {
             const task = tasks[0]
             // status_codeが20000（成功）の場合のみ処理
@@ -174,7 +185,17 @@ export default function IntegratedAnalysis() {
     
     // DataForSEO Labsから関連キーワードを抽出
     try {
-      const tasks = dataforseoLabs?.response_json?.tasks
+      // response_jsonが存在しない場合は、response_textをパース
+      let responseJson = dataforseoLabs?.response_json
+      if (!responseJson && dataforseoLabs?.response_text) {
+        try {
+          responseJson = JSON.parse(dataforseoLabs.response_text)
+        } catch (parseError) {
+          console.warn('Failed to parse DataForSEO Labs response_text:', parseError)
+        }
+      }
+      
+      const tasks = responseJson?.tasks
       if (tasks && tasks.length > 0) {
         const task = tasks[0]
         // status_codeが20000（成功）の場合のみ処理
