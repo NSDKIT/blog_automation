@@ -501,6 +501,93 @@ export default function IntegratedAnalysis() {
         </div>
       )}
 
+      {/* デバッグ情報表示 */}
+      {mutation.data && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-yellow-800 font-semibold">
+              🔍 デバッグ情報
+            </p>
+            <button
+              onClick={() => setShowDebugInfo(!showDebugInfo)}
+              className="px-3 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 rounded text-sm"
+            >
+              {showDebugInfo ? '非表示' : '表示'}
+            </button>
+          </div>
+          {showDebugInfo && rawApiData && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <p className="text-sm font-medium text-yellow-900 mb-2">取得した関連キーワード数: {mutation.data.related_keywords?.length || 0}件</p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-yellow-900 mb-2">Domain Analytics レスポンス構造:</p>
+                <div className="bg-white border border-yellow-300 rounded p-3 text-xs overflow-auto max-h-60">
+                  <pre className="whitespace-pre-wrap">
+                    {JSON.stringify({
+                      resultsCount: rawApiData.domainAnalytics?.results?.length || 0,
+                      firstResult: rawApiData.domainAnalytics?.results?.[0] ? {
+                        hasResponseJson: !!rawApiData.domainAnalytics.results[0].response_json,
+                        hasResponseText: !!rawApiData.domainAnalytics.results[0].response_text,
+                        responseJsonKeys: rawApiData.domainAnalytics.results[0].response_json ? Object.keys(rawApiData.domainAnalytics.results[0].response_json) : [],
+                        tasks: rawApiData.domainAnalytics.results[0].response_json?.tasks ? {
+                          count: rawApiData.domainAnalytics.results[0].response_json.tasks.length,
+                          firstTask: {
+                            statusCode: rawApiData.domainAnalytics.results[0].response_json.tasks[0].status_code,
+                            hasResult: !!rawApiData.domainAnalytics.results[0].response_json.tasks[0].result,
+                            resultCount: rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.length || 0,
+                            firstResultKeys: rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.[0] ? Object.keys(rawApiData.domainAnalytics.results[0].response_json.tasks[0].result[0]) : [],
+                            hasItems: !!rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.[0]?.items,
+                            itemsCount: rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.[0]?.items?.length || 0
+                          }
+                        } : null
+                      } : null
+                    }, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-yellow-900 mb-2">DataForSEO Labs レスポンス構造:</p>
+                <div className="bg-white border border-yellow-300 rounded p-3 text-xs overflow-auto max-h-60">
+                  <pre className="whitespace-pre-wrap">
+                    {JSON.stringify({
+                      hasResponseJson: !!rawApiData.dataforseoLabs?.response_json,
+                      hasResponseText: !!rawApiData.dataforseoLabs?.response_text,
+                      responseJsonKeys: rawApiData.dataforseoLabs?.response_json ? Object.keys(rawApiData.dataforseoLabs.response_json) : [],
+                      tasks: rawApiData.dataforseoLabs?.response_json?.tasks ? {
+                        count: rawApiData.dataforseoLabs.response_json.tasks.length,
+                        firstTask: {
+                          statusCode: rawApiData.dataforseoLabs.response_json.tasks[0].status_code,
+                          hasResult: !!rawApiData.dataforseoLabs.response_json.tasks[0].result,
+                          resultCount: rawApiData.dataforseoLabs.response_json.tasks[0].result?.length || 0,
+                          firstResultKeys: rawApiData.dataforseoLabs.response_json.tasks[0].result?.[0] ? Object.keys(rawApiData.dataforseoLabs.response_json.tasks[0].result[0]) : [],
+                          hasItems: !!rawApiData.dataforseoLabs.response_json.tasks[0].result?.[0]?.items,
+                          itemsCount: rawApiData.dataforseoLabs.response_json.tasks[0].result?.[0]?.items?.length || 0
+                        }
+                      } : null
+                    }, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-yellow-900 mb-2">生データ（完全版）:</p>
+                <div className="bg-white border border-yellow-300 rounded p-3 text-xs overflow-auto max-h-96">
+                  <details>
+                    <summary className="cursor-pointer text-yellow-900 font-medium mb-2">クリックして展開</summary>
+                    <pre className="whitespace-pre-wrap mt-2">
+                      {JSON.stringify(rawApiData, null, 2)}
+                    </pre>
+                  </details>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {mutation.data && (
         <div className="space-y-6">
           {/* メインキーワード分析 */}
