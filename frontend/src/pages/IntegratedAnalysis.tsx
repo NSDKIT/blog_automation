@@ -190,18 +190,33 @@ export default function IntegratedAnalysis() {
                   console.log('[IntegratedAnalysis] Using pattern 1: task.result[0].items, count:', task.result[0].items.length)
                   for (const item of task.result[0].items) {
                     if (item.keyword) {
-                      const difficulty = item.keyword_difficulty || 50
-                      relatedKeywords.push({
-                        keyword: item.keyword || '',
-                        search_volume: item.search_volume || 0,
-                        cpc: item.cpc || 0,
-                        competition: item.competition || 'low',
-                        competition_index: item.competition_index || 0,
-                        difficulty: difficulty,
-                        difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-                        priority_score: calculatePriorityScore(item),
-                        recommended_rank: estimateRecommendedRank(difficulty)
-                      })
+                      // keyword_info と keyword_properties から値を取得
+                      const keywordInfo = item.keyword_info || {}
+                      const keywordProperties = item.keyword_properties || {}
+                      const searchVolume = keywordInfo.search_volume || 0
+                      const cpc = keywordInfo.cpc || 0
+                      const competitionLevel = keywordInfo.competition_level || 'LOW'
+                      const competitionIndex = keywordInfo.competition || 0
+                      const difficulty = keywordProperties.keyword_difficulty || 50
+                      
+                      // 重複チェック
+                      if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
+                        relatedKeywords.push({
+                          keyword: item.keyword || '',
+                          search_volume: searchVolume,
+                          cpc: cpc,
+                          competition: competitionLevel.toLowerCase(),
+                          competition_index: competitionIndex,
+                          difficulty: difficulty,
+                          difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+                          priority_score: calculatePriorityScore({
+                            search_volume: searchVolume,
+                            cpc: cpc,
+                            keyword_difficulty: difficulty
+                          }),
+                          recommended_rank: estimateRecommendedRank(difficulty)
+                        })
+                      }
                     }
                   }
                 }
@@ -211,18 +226,31 @@ export default function IntegratedAnalysis() {
                   for (const item of task.result) {
                     // キーワードオブジェクトかどうかをチェック
                     if (item.keyword && typeof item.keyword === 'string') {
-                      const difficulty = item.keyword_difficulty || 50
+                      // keyword_info と keyword_properties から値を取得（パターン1と同じ構造の場合）
+                      const keywordInfo = item.keyword_info || {}
+                      const keywordProperties = item.keyword_properties || {}
+                      // 直接プロパティがある場合も対応
+                      const searchVolume = keywordInfo.search_volume || item.search_volume || 0
+                      const cpc = keywordInfo.cpc || item.cpc || 0
+                      const competitionLevel = keywordInfo.competition_level || item.competition_level || 'LOW'
+                      const competitionIndex = keywordInfo.competition || item.competition_index || 0
+                      const difficulty = keywordProperties.keyword_difficulty || item.keyword_difficulty || 50
+                      
                       // 重複チェック
                       if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
                         relatedKeywords.push({
                           keyword: item.keyword || '',
-                          search_volume: item.search_volume || 0,
-                          cpc: item.cpc || 0,
-                          competition: item.competition || 'low',
-                          competition_index: item.competition_index || 0,
+                          search_volume: searchVolume,
+                          cpc: cpc,
+                          competition: competitionLevel.toLowerCase(),
+                          competition_index: competitionIndex,
                           difficulty: difficulty,
                           difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-                          priority_score: calculatePriorityScore(item),
+                          priority_score: calculatePriorityScore({
+                            search_volume: searchVolume,
+                            cpc: cpc,
+                            keyword_difficulty: difficulty
+                          }),
                           recommended_rank: estimateRecommendedRank(difficulty)
                         })
                       }
@@ -271,18 +299,30 @@ export default function IntegratedAnalysis() {
               console.log('[IntegratedAnalysis] Using pattern 1: task.result[0].items, count:', task.result[0].items.length)
               for (const item of task.result[0].items) {
                 if (item.keyword) {
+                  // keyword_info と keyword_properties から値を取得
+                  const keywordInfo = item.keyword_info || {}
+                  const keywordProperties = item.keyword_properties || {}
+                  const searchVolume = keywordInfo.search_volume || 0
+                  const cpc = keywordInfo.cpc || 0
+                  const competitionLevel = keywordInfo.competition_level || 'LOW'
+                  const competitionIndex = keywordInfo.competition || 0
+                  const difficulty = keywordProperties.keyword_difficulty || 50
+                  
                   // 重複チェック
                   if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
-                    const difficulty = item.keyword_difficulty || 50
                     relatedKeywords.push({
                       keyword: item.keyword || '',
-                      search_volume: item.search_volume || 0,
-                      cpc: item.cpc || 0,
-                      competition: item.competition || 'low',
-                      competition_index: item.competition_index || 0,
+                      search_volume: searchVolume,
+                      cpc: cpc,
+                      competition: competitionLevel.toLowerCase(),
+                      competition_index: competitionIndex,
                       difficulty: difficulty,
                       difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-                      priority_score: calculatePriorityScore(item),
+                      priority_score: calculatePriorityScore({
+                        search_volume: searchVolume,
+                        cpc: cpc,
+                        keyword_difficulty: difficulty
+                      }),
                       recommended_rank: estimateRecommendedRank(difficulty)
                     })
                   }
@@ -295,18 +335,31 @@ export default function IntegratedAnalysis() {
               for (const item of task.result) {
                 // キーワードオブジェクトかどうかをチェック
                 if (item.keyword && typeof item.keyword === 'string') {
+                  // keyword_info と keyword_properties から値を取得（パターン1と同じ構造の場合）
+                  const keywordInfo = item.keyword_info || {}
+                  const keywordProperties = item.keyword_properties || {}
+                  // 直接プロパティがある場合も対応
+                  const searchVolume = keywordInfo.search_volume || item.search_volume || 0
+                  const cpc = keywordInfo.cpc || item.cpc || 0
+                  const competitionLevel = keywordInfo.competition_level || item.competition_level || 'LOW'
+                  const competitionIndex = keywordInfo.competition || item.competition_index || 0
+                  const difficulty = keywordProperties.keyword_difficulty || item.keyword_difficulty || 50
+                  
                   // 重複チェック
                   if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
-                    const difficulty = item.keyword_difficulty || 50
                     relatedKeywords.push({
                       keyword: item.keyword || '',
-                      search_volume: item.search_volume || 0,
-                      cpc: item.cpc || 0,
-                      competition: item.competition || 'low',
-                      competition_index: item.competition_index || 0,
+                      search_volume: searchVolume,
+                      cpc: cpc,
+                      competition: competitionLevel.toLowerCase(),
+                      competition_index: competitionIndex,
                       difficulty: difficulty,
                       difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-                      priority_score: calculatePriorityScore(item),
+                      priority_score: calculatePriorityScore({
+                        search_volume: searchVolume,
+                        cpc: cpc,
+                        keyword_difficulty: difficulty
+                      }),
                       recommended_rank: estimateRecommendedRank(difficulty)
                     })
                   }
