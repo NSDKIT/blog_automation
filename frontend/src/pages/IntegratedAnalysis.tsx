@@ -18,6 +18,8 @@ export default function IntegratedAnalysis() {
   const [volumeFilter, setVolumeFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
+  const [showDebugInfo, setShowDebugInfo] = useState(false)
+  const [rawApiData, setRawApiData] = useState<any>(null)
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -84,6 +86,14 @@ export default function IntegratedAnalysis() {
       } catch (error) {
         console.warn('SERP Analysis failed, continuing without it:', error)
       }
+      
+      // デバッグ用に生データを保存
+      setRawApiData({
+        keywordData: keywordDataResult,
+        serp: serpResult,
+        domainAnalytics: domainAnalyticsResult,
+        dataforseoLabs: dataforseoLabsResult
+      })
       
       // 結果を統合分析の形式に変換
       return transformToIntegratedResult(keywordDataResult, serpResult, domainAnalyticsResult, dataforseoLabsResult)
