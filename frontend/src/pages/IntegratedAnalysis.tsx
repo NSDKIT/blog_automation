@@ -20,12 +20,164 @@ export default function IntegratedAnalysis() {
   const itemsPerPage = 20
 
   const mutation = useMutation({
-    mutationFn: () => analyzeIntegrated(keyword, locationCode, languageCode),
+    mutationFn: async () => {
+      // 各タブの既存エンドポイントを並列で呼び出し
+      const [keywordDataResult, serpResult, domainAnalyticsResult, dataforseoLabsResult] = await Promise.all([
+        // 1. Keyword Data Analysis
+        apiClient.post(
+          `/keyword-data/analyze?keyword=${encodeURIComponent(keyword)}&location_code=${locationCode}`,
+          {}
+        ).then(res => res.data),
+        
+        // 2. SERP Analysis
+        analyzeSERP(keyword, locationCode, languageCode),
+        
+        // 3. Domain Analytics
+        analyzeDomainAnalytics(keyword, undefined, locationCode, languageCode),
+        
+        // 4. DataForSEO Labs (related_keywords)
+        analyzeDataForSEOLabs('related_keywords', {
+          keyword,
+          location_code: locationCode,
+          language_code: languageCode
+        })
+      ])
+      
+      // 結果を統合分析の形式に変換
+      return transformToIntegratedResult(keywordDataResult, serpResult, domainAnalyticsResult, dataforseoLabsResult)
+    },
     onSuccess: () => {
       setSelectedKeywords(new Set())
       setCurrentPage(1)
     }
   })
+  
+  // 各APIの結果を統合分析の形式に変換する関数
+  const transformToIntegratedResult = (keywordData: any, serp: any, domainAnalytics: any, dataforseoLabs: any) => {
+    // メインキーワードデータを取得
+    const mainKeywordData = keywordData?.seo_analysis?.keyword_data
+    const mainKeyword = mainKeywordData ? {
+      keyword: mainKeywordData.keyword,
+      search_volume: mainKeywordData.search_volume || 0,
+      cpc: mainKeywordData.cpc || 0,
+      competition: mainKeywordData.competition || 'low',
+      competition_index: mainKeywordData.competition_index || 0,
+      difficulty: 50, // デフォルト値
+      difficulty_level: 'medium'
+    } : null
+    
+    // 関連キーワードを取得（Domain AnalyticsとDataForSEO Labsから）
+    const relatedKeywords: any[] = []
+    
+    // Domain Analyticsから関連キーワードを抽出
+    if (domainAnalytics?.results) {
+      for (const result of domainAnalytics.results) {
+        if (result.response_json?.tasks?.[0]?.result?.[0]?.items) {
+          for (const item of result.response_json.tasks[0].result[0].items) {
+            const difficulty = item.keyword_difficulty || 50
+            relatedKeywords.push({
+              keyword: item.keyword || '',
+              search_volume: item.search_volume || 0,
+              cpc: item.cpc || 0,
+              competition: item.competition || 'low',
+              competition_index: item.competition_index || 0,
+              difficulty: difficulty,
+              difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+              priority_score: calculatePriorityScore(item),
+              recommended_rank: estimateRecommendedRank(difficulty)
+            })
+          }
+        }
+      }
+    }
+    
+    // DataForSEO Labsから関連キーワードを抽出
+    if (dataforseoLabs?.response_json?.tasks?.[0]?.result?.[0]?.items) {
+      for (const item of dataforseoLabs.response_json.tasks[0].result[0].items) {
+        // 重複チェック
+        if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
+          const difficulty = item.keyword_difficulty || 50
+          relatedKeywords.push({
+            keyword: item.keyword || '',
+            search_volume: item.search_volume || 0,
+            cpc: item.cpc || 0,
+            competition: item.competition || 'low',
+            competition_index: item.competition_index || 0,
+            difficulty: difficulty,
+            difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+            priority_score: calculatePriorityScore(item),
+            recommended_rank: estimateRecommendedRank(difficulty)
+          })
+        }
+      }
+    }
+    
+    // 優先度スコアでソート
+    relatedKeywords.sort((a, b) => b.priority_score - a.priority_score)
+    
+    // サマリーステータスを計算
+    const immediate = relatedKeywords.filter(kw => kw.difficulty_level === '即攻略')
+    const medium = relatedKeywords.filter(kw => kw.difficulty_level === '中期目標')
+    const long = relatedKeywords.filter(kw => kw.difficulty_level === '長期目標')
+    
+    const summaryStats = {
+      immediate_attack: {
+        count: immediate.length,
+        total_volume: immediate.reduce((sum, kw) => sum + kw.search_volume, 0)
+      },
+      medium_term: {
+        count: medium.length,
+        total_volume: medium.reduce((sum, kw) => sum + kw.search_volume, 0)
+      },
+      long_term: {
+        count: long.length,
+        total_volume: long.reduce((sum, kw) => sum + kw.search_volume, 0)
+      }
+    }
+    
+    // 推奨戦略
+    const recommendedStrategy = {
+      phase1: {
+        keywords: immediate.slice(0, 10),
+        estimated_traffic: immediate.slice(0, 10).reduce((sum, kw) => sum + (kw.search_volume * 0.1), 0),
+        period: '1-3ヶ月'
+      }
+    }
+    
+    return {
+      main_keyword: mainKeyword,
+      related_keywords: relatedKeywords,
+      summary_stats: summaryStats,
+      recommended_strategy: recommendedStrategy,
+      total_count: relatedKeywords.length
+    }
+  }
+  
+  // 優先度スコアを計算
+  const calculatePriorityScore = (item: any) => {
+    const volume = item.search_volume || 0
+    const difficulty = item.keyword_difficulty || 50
+    const cpc = item.cpc || 0
+    
+    // 検索ボリュームスコア（0-40点）
+    const volumeScore = Math.min(40, Math.log10(volume + 1) * 10)
+    
+    // 難易度スコア（0-30点、難易度が低いほど高得点）
+    const difficultyScore = (100 - difficulty) * 0.3
+    
+    // CPCスコア（0-30点）
+    const cpcScore = Math.min(30, cpc * 2)
+    
+    return volumeScore + difficultyScore + cpcScore
+  }
+  
+  // 推奨順位を推定
+  const estimateRecommendedRank = (difficulty: number) => {
+    if (difficulty < 30) return 1
+    if (difficulty < 50) return 5
+    if (difficulty < 70) return 10
+    return 20
+  }
 
   // フィルター適用
   const filteredKeywords = useMemo(() => {
