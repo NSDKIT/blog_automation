@@ -649,8 +649,57 @@ export default function IntegratedAnalysis() {
           </div>
           {showDebugInfo && rawApiData && (
             <div className="space-y-4 mt-4">
-              <div>
-                <p className="text-sm font-medium text-yellow-900 mb-2">取得した関連キーワード数: {mutation.data.related_keywords?.length || 0}件</p>
+              <div className="bg-white border-2 border-yellow-400 rounded-lg p-4">
+                <p className="text-lg font-bold text-yellow-900 mb-2">
+                  📊 取得結果サマリー
+                </p>
+                <div className="space-y-2">
+                  <p className="text-base font-semibold text-gray-800">
+                    総取得件数: <span className="text-indigo-600 text-xl">{mutation.data.related_keywords?.length || 0}件</span>
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    • Domain Analytics: {(() => {
+                      let count = 0
+                      if (rawApiData.domainAnalytics?.results) {
+                        for (const result of rawApiData.domainAnalytics.results) {
+                          try {
+                            const responseJson = result.response_json || (result.response_text ? JSON.parse(result.response_text) : null)
+                            const tasks = responseJson?.tasks || []
+                            for (const task of tasks) {
+                              if (task.status_code === 20000 && task.result) {
+                                if (task.result.length > 0 && task.result[0].items && Array.isArray(task.result[0].items)) {
+                                  count += task.result[0].items.length
+                                } else if (Array.isArray(task.result)) {
+                                  count += task.result.filter((item: any) => item.keyword).length
+                                }
+                              }
+                            }
+                          } catch (e) {}
+                        }
+                      }
+                      return count
+                    })()}件
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    • DataForSEO Labs: {(() => {
+                      let count = 0
+                      try {
+                        const responseJson = rawApiData.dataforseoLabs?.response_json || (rawApiData.dataforseoLabs?.response_text ? JSON.parse(rawApiData.dataforseoLabs.response_text) : null)
+                        const tasks = responseJson?.tasks || []
+                        for (const task of tasks) {
+                          if (task.status_code === 20000 && task.result) {
+                            if (task.result.length > 0 && task.result[0].items && Array.isArray(task.result[0].items)) {
+                              count += task.result[0].items.length
+                            } else if (Array.isArray(task.result)) {
+                              count += task.result.filter((item: any) => item.keyword).length
+                            }
+                          }
+                        }
+                      } catch (e) {}
+                      return count
+                    })()}件
+                  </p>
+                </div>
               </div>
               
               <div>
