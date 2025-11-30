@@ -155,8 +155,11 @@ async def integrated_analysis(
             "limit": related_keywords_limit
         }]
         
+        # DomainAnalyticsAPI.pyと同じ形式で送信（json.dumpsを使用）
+        payload_json = json.dumps(payload, ensure_ascii=False)
+        
         async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
+            response = await client.post(url, headers=headers, content=payload_json)
             response.raise_for_status()
             result = response.json()
             
@@ -198,8 +201,9 @@ async def integrated_analysis(
                         }]
                         
                         async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
+                            difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
                             difficulty_response = await difficulty_client.post(
-                                difficulty_url, headers=headers, json=difficulty_payload
+                                difficulty_url, headers=headers, content=difficulty_payload_json
                             )
                             difficulty_response.raise_for_status()
                             difficulty_result = difficulty_response.json()
@@ -333,8 +337,9 @@ async def integrated_analysis(
             }]
             
             async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
+                difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
                 difficulty_response = await difficulty_client.post(
-                    difficulty_url, headers=headers, json=difficulty_payload
+                    difficulty_url, headers=headers, content=difficulty_payload_json
                 )
                 difficulty_response.raise_for_status()
                 difficulty_result = difficulty_response.json()
