@@ -1,14 +1,17 @@
 import { useState, useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import apiClient from '../api/client'
 import { analyzeSERP } from '../api/serp'
 import { analyzeDomainAnalytics } from '../api/domain_analytics'
 import { analyzeDataForSEOLabs } from '../api/dataforseo_labs'
+import { createIntegratedAnalysis } from '../api/integrated_analysis_results'
 
 type FilterType = 'all' | 'immediate' | 'medium' | 'long'
 type SortType = 'priority' | 'volume' | 'difficulty_asc' | 'difficulty_desc' | 'cpc' | 'rank'
 
 export default function IntegratedAnalysis() {
+  const navigate = useNavigate()
   const [keyword, setKeyword] = useState('')
   const [locationCode, setLocationCode] = useState(2840) // 日本
   const [languageCode, setLanguageCode] = useState('ja')
@@ -848,6 +851,31 @@ export default function IntegratedAnalysis() {
                 className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm font-medium"
               >
                 📄 レポートダウンロード（CSV）
+              </button>
+              <button
+                onClick={async () => {
+                  if (!mutation.data) return
+                  try {
+                    // 統合分析結果を保存
+                    await createIntegratedAnalysis({
+                      keyword: keyword,
+                      location_code: locationCode,
+                      language_code: languageCode,
+                      main_keyword: mutation.data.main_keyword,
+                      related_keywords: mutation.data.related_keywords,
+                      summary_stats: mutation.data.summary_stats,
+                      recommended_strategy: mutation.data.recommended_strategy
+                    })
+                    // SERP分析タブに移動
+                    navigate('/serp-analysis')
+                  } catch (error) {
+                    console.error('Failed to save integrated analysis:', error)
+                    alert('統合分析結果の保存に失敗しました')
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium"
+              >
+                🔍 SERP分析を行う
               </button>
               <button
                 onClick={() => {
