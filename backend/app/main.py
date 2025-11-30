@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi import Request
-from app.routers import auth as auth_router, articles as articles_router, settings as settings_router, images as images_router, options as options_router, keyword_data as keyword_data_router, serp_analysis as serp_analysis_router, domain_analytics as domain_analytics_router
+from app.routers import auth as auth_router, articles as articles_router, settings as settings_router, images as images_router, options as options_router, keyword_data as keyword_data_router, serp_analysis as serp_analysis_router, domain_analytics as domain_analytics_router, dataforseo_labs as dataforseo_labs_router
 from app.config import settings as app_settings
 import os
 
@@ -61,6 +61,7 @@ app.include_router(options_router.router, prefix="/api/options", tags=["選択�
 app.include_router(keyword_data_router.router, prefix="/api/keyword-data", tags=["キーワードデータ"])
 app.include_router(serp_analysis_router.router, prefix="/api/serp-analysis", tags=["SERP分析"])
 app.include_router(domain_analytics_router.router, prefix="/api/domain-analytics", tags=["Domain Analytics"])
+app.include_router(dataforseo_labs_router.router, prefix="/api/dataforseo-labs", tags=["DataForSEO Labs"])
 
 
 @app.get("/")

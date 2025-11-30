@@ -9,6 +9,7 @@ import KeywordAnalysis from './pages/KeywordAnalysis'
 import KeywordDataAnalysis from './pages/KeywordDataAnalysis'
 import SERPAnalysis from './pages/SERPAnalysis'
 import DomainAnalytics from './pages/DomainAnalytics'
+import DataForSEOLabs from './pages/DataForSEOLabs'
 import Settings from './pages/Settings'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/Layout'
@@ -102,6 +103,16 @@ function App() {
               <PrivateRoute>
                 <Layout>
                   <DomainAnalytics />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/dataforseo-labs"
+            element={
+              <PrivateRoute>
+                <Layout>
+                  <DataForSEOLabs />
                 </Layout>
               </PrivateRoute>
             }
