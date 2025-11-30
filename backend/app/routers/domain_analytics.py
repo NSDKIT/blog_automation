@@ -69,7 +69,6 @@ async def analyze_domain_analytics(
             "payload": [{
                 "keyword": keyword,
                 "location_code": location_code,
-                "language_code": language_code,
                 "depth": 3,
                 "include_seed_keyword": False,
                 "include_serp_info": False,
@@ -87,7 +86,6 @@ async def analyze_domain_analytics(
             "payload": [{
                 "keyword": keyword,
                 "location_code": location_code,
-                "language_code": language_code,
                 "include_seed_keyword": False,
                 "include_serp_info": False,
                 "ignore_synonyms": False,
@@ -104,7 +102,6 @@ async def analyze_domain_analytics(
             "payload": [{
                 "keywords": [keyword],
                 "location_code": location_code,
-                "language_code": language_code,
                 "include_serp_info": False,
                 "closely_variants": False,
                 "ignore_synonyms": False,
