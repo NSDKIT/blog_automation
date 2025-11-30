@@ -21,27 +21,69 @@ export default function IntegratedAnalysis() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      // 各タブの既存エンドポイントを並列で呼び出し
-      const [keywordDataResult, serpResult, domainAnalyticsResult, dataforseoLabsResult] = await Promise.all([
-        // 1. Keyword Data Analysis
-        apiClient.post(
+      // 各タブの既存エンドポイントを順次呼び出し（サーバー負荷を軽減）
+      // リトライロジック付きのヘルパー関数
+      const retryRequest = async <T>(
+        requestFn: () => Promise<T>,
+        maxRetries: number = 3,
+        delay: number = 2000
+      ): Promise<T> => {
+        for (let i = 0; i < maxRetries; i++) {
+          try {
+            return await requestFn()
+          } catch (error: any) {
+            const isLastAttempt = i === maxRetries - 1
+            const isRetryable = error?.response?.status === 503 || error?.response?.status === 429 || error?.code === 'ECONNABORTED'
+            
+            if (isLastAttempt || !isRetryable) {
+              throw error
+            }
+            
+            // リトライ前に待機
+            await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+          }
+        }
+        throw new Error('Max retries exceeded')
+      }
+      
+      // 1. Keyword Data Analysis
+      const keywordDataResult = await retryRequest(async () => {
+        const response = await apiClient.post(
           `/keyword-data/analyze?keyword=${encodeURIComponent(keyword)}&location_code=${locationCode}`,
-          {}
-        ).then(res => res.data),
-        
-        // 2. SERP Analysis
-        analyzeSERP(keyword, locationCode, languageCode),
-        
-        // 3. Domain Analytics
-        analyzeDomainAnalytics(keyword, undefined, locationCode, languageCode),
-        
-        // 4. DataForSEO Labs (related_keywords)
-        analyzeDataForSEOLabs('related_keywords', {
+          {},
+          { timeout: 120000 }
+        )
+        return response.data
+      })
+      
+      // 少し待機してから次のリクエスト
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 2. Domain Analytics
+      const domainAnalyticsResult = await retryRequest(async () => {
+        return await analyzeDomainAnalytics(keyword, undefined, locationCode, languageCode)
+      })
+      
+      // 少し待機してから次のリクエスト
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 3. DataForSEO Labs (related_keywords)
+      const dataforseoLabsResult = await retryRequest(async () => {
+        return await analyzeDataForSEOLabs('related_keywords', {
           keyword,
           location_code: locationCode,
           language_code: languageCode
         })
-      ])
+      })
+      
+      // SERP Analysisはオプション（エラーが発生しても続行）
+      let serpResult = null
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        serpResult = await analyzeSERP(keyword, locationCode, languageCode)
+      } catch (error) {
+        console.warn('SERP Analysis failed, continuing without it:', error)
+      }
       
       // 結果を統合分析の形式に変換
       return transformToIntegratedResult(keywordDataResult, serpResult, domainAnalyticsResult, dataforseoLabsResult)
