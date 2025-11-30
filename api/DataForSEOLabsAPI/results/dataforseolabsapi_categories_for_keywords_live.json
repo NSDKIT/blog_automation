@@ -1,0 +1,9 @@
+{
+  "url": "https://api.dataforseo.com/v3/dataforseo_labs/google/categories_for_keywords/live",
+  "payload": "[{\"keywords\":[\"seo\"], \"language_code\":\"ar\"}]",
+  "headers": {
+    "Authorization": "Basic bnNka2l0MDIyNEBnbWFpbC5jb206M2EyOGE3ODIxMTEyOWEwZQ==",
+    "Content-Type": "application/json"
+  },
+  "response_text": "{\n    \"version\": \"0.1.20251127\",\n    \"status_code\": 20000,\n    \"status_message\": \"Ok.\",\n    \"time\": \"0.1247 sec.\",\n    \"cost\": 0.00101,\n    \"tasks_count\": 1,\n    \"tasks_error\": 0,\n    \"tasks\": [\n        {\n            \"id\": \"11291805-1242-0587-0000-c910e7c418d9\",\n            \"status_code\": 20000,\n            \"status_message\": \"Ok.\",\n            \"time\": \"0.1114 sec.\",\n            \"cost\": 0.00101,\n            \"result_count\": 1,\n            \"path\": [\n                \"v3\",\n                \"dataforseo_labs\",\n                \"google\",\n                \"categories_for_keywords\",\n                \"live\"\n            ],\n            \"data\": {\n                \"api\": \"dataforseo_labs\",\n                \"function\": \"categories_for_keywords\",\n                \"se_type\": \"google\",\n                \"keywords\": [\n                    \"seo\"\n                ],\n                \"language_code\": \"ar\"\n            },\n            \"result\": [\n                {\n                    \"language_code\": \"ar\",\n                    \"items_count\": 1,\n                    \"items\": [\n                        {\n                            \"keyword\": \"seo\",\n                            \"categories\": [\n                                10007,\n                                13418\n                            ]\n                        }\n                    ]\n                }\n            ]\n        }\n    ]\n}"
+}
