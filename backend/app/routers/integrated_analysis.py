@@ -129,7 +129,11 @@ async def integrated_analysis(
                     if task_result and len(task_result) > 0:
                         main_keyword_data = task_result[0]
     except Exception as e:
-        print(f"メインキーワード分析エラー: {str(e)}")
+        error_msg = f"メインキーワード分析エラー: {str(e)}"
+        print(error_msg)
+        import traceback
+        traceback.print_exc()
+        # メインキーワードのエラーは致命的ではないので、続行
     
     # 2. 関連キーワードの取得（DataForSEO Labs related_keywords API）
     related_keywords_data = []
@@ -246,7 +250,15 @@ async def integrated_analysis(
                                 "recommended_rank": recommended_rank
                             })
     except Exception as e:
-        print(f"関連キーワード分析エラー: {str(e)}")
+        error_msg = f"関連キーワード分析エラー: {str(e)}"
+        print(error_msg)
+        import traceback
+        traceback.print_exc()
+        # エラーが発生しても空のリストを返すのではなく、エラーを伝播
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"関連キーワード分析中にエラーが発生しました: {str(e)}"
+        )
     
     # 関連キーワードを優先度スコア順にソート
     related_keywords_data.sort(key=lambda x: x["priority_score"], reverse=True)
@@ -284,7 +296,11 @@ async def integrated_analysis(
                             if items and len(items) > 0:
                                 main_difficulty = items[0].get("keyword_difficulty", 50)
         except Exception as e:
-            print(f"メインキーワード難易度取得エラー: {str(e)}")
+            error_msg = f"メインキーワード難易度取得エラー: {str(e)}"
+            print(error_msg)
+            import traceback
+            traceback.print_exc()
+            # 難易度取得のエラーは致命的ではないので、デフォルト値を使用
         
         competition_level = get_competition_level(competition_index)
         difficulty_level = get_difficulty_level(main_difficulty)

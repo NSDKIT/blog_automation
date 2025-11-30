@@ -235,9 +235,19 @@ export default function IntegratedAnalysis() {
 
       {mutation.isError && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <p className="text-red-800">
-            エラーが発生しました: {mutation.error instanceof Error ? mutation.error.message : 'Unknown error'}
+          <p className="text-red-800 font-semibold mb-2">
+            エラーが発生しました
           </p>
+          <p className="text-red-700 text-sm">
+            {mutation.error instanceof Error 
+              ? mutation.error.message 
+              : 'Unknown error'}
+          </p>
+          {mutation.error && 'response' in mutation.error && (
+            <div className="mt-2 text-xs text-red-600">
+              <p>詳細: {JSON.stringify(mutation.error.response?.data || mutation.error, null, 2)}</p>
+            </div>
+          )}
         </div>
       )}
 
