@@ -142,7 +142,7 @@ async def integrated_analysis(
         payload = [{
             "keyword": keyword,
             "location_code": location_code,
-            "language_code": language_code,
+            # language_codeはrelated_keywords APIではサポートされていないため削除
             "depth": 3,
             "include_seed_keyword": False,
             "include_serp_info": False,
