@@ -243,9 +243,13 @@ export default function IntegratedAnalysis() {
               ? mutation.error.message 
               : 'Unknown error'}
           </p>
-          {mutation.error && 'response' in mutation.error && (
+          {mutation.error && typeof mutation.error === 'object' && 'response' in mutation.error && (
             <div className="mt-2 text-xs text-red-600">
-              <p>詳細: {JSON.stringify(mutation.error.response?.data || mutation.error, null, 2)}</p>
+              <p>詳細: {JSON.stringify(
+                (mutation.error as any).response?.data || mutation.error, 
+                null, 
+                2
+              )}</p>
             </div>
           )}
         </div>
