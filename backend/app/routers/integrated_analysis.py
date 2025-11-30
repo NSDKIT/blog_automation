@@ -4,7 +4,7 @@ tougou.mdの仕様に基づいて、複数のDataForSEO APIを統合して包括
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from typing import Dict, Any, Optional, List
-import httpx
+import requests
 import json
 import os
 from app.dependencies import get_current_user
@@ -119,12 +119,12 @@ async def integrated_analysis(
         # DomainAnalyticsAPI.pyと同じ形式で送信（json.dumpsを使用）
         payload_json = json.dumps(payload, ensure_ascii=False)
         
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, data=payload_json)
-            response.raise_for_status()
-            result = response.json()
-            
-            if result.get("tasks") and len(result["tasks"]) > 0:
+        # DomainAnalyticsと同じくrequests.postを使用
+        response = requests.post(url, headers=headers, data=payload_json, timeout=120)
+        response.raise_for_status()
+        result = response.json()
+        
+        if result.get("tasks") and len(result["tasks"]) > 0:
                 task = result["tasks"][0]
                 if task.get("status_code") == 20000:
                     task_result = task.get("result", [])
@@ -160,13 +160,13 @@ async def integrated_analysis(
         # DomainAnalyticsAPI.pyと同じ形式で送信（json.dumpsを使用）
         payload_json = json.dumps(payload, ensure_ascii=False)
         
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, data=payload_json)
-            response.raise_for_status()
-            result = response.json()
-            
-            # DataForSEO APIのエラーステータスをチェック
-            if result.get("tasks") and len(result["tasks"]) > 0:
+        # DomainAnalyticsと同じくrequests.postを使用
+        response = requests.post(url, headers=headers, data=payload_json, timeout=120)
+        response.raise_for_status()
+        result = response.json()
+        
+        # DataForSEO APIのエラーステータスをチェック
+        if result.get("tasks") and len(result["tasks"]) > 0:
                 task = result["tasks"][0]
                 status_code = task.get("status_code")
                 status_message = task.get("status_message", "")
@@ -202,13 +202,13 @@ async def integrated_analysis(
                             "language_name": language_name
                         }]
                         
-                        async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
-                            difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
-                            difficulty_response = await difficulty_client.post(
-                                difficulty_url, headers=headers, data=difficulty_payload_json
-                            )
-                            difficulty_response.raise_for_status()
-                            difficulty_result = difficulty_response.json()
+                        # DomainAnalyticsと同じくrequests.postを使用
+                        difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
+                        difficulty_response = requests.post(
+                            difficulty_url, headers=headers, data=difficulty_payload_json, timeout=120
+                        )
+                        difficulty_response.raise_for_status()
+                        difficulty_result = difficulty_response.json()
                             
                             difficulty_map = {}
                             if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
@@ -232,13 +232,13 @@ async def integrated_analysis(
                         "language_code": language_code
                     }]
                     
-                    async with httpx.AsyncClient(timeout=120.0) as sv_client:
-                        sv_payload_json = json.dumps(search_volume_payload, ensure_ascii=False)
-                        sv_response = await sv_client.post(
-                            search_volume_url, headers=headers, data=sv_payload_json
-                        )
-                        sv_response.raise_for_status()
-                        sv_result = sv_response.json()
+                    # DomainAnalyticsと同じくrequests.postを使用
+                    sv_payload_json = json.dumps(search_volume_payload, ensure_ascii=False)
+                    sv_response = requests.post(
+                        search_volume_url, headers=headers, data=sv_payload_json, timeout=120
+                    )
+                    sv_response.raise_for_status()
+                    sv_result = sv_response.json()
                         
                         sv_map = {}
                         if sv_result.get("tasks") and len(sv_result["tasks"]) > 0:
@@ -288,8 +288,8 @@ async def integrated_analysis(
     except HTTPException:
         # HTTPExceptionはそのまま再スロー
         raise
-    except httpx.HTTPStatusError as e:
-        error_msg = f"HTTPエラー: {e.response.status_code} - {e.response.text[:500]}"
+    except requests.exceptions.HTTPError as e:
+        error_msg = f"HTTPエラー: {e.response.status_code if e.response else 'Unknown'} - {e.response.text[:500] if e.response else str(e)}"
         print(f"関連キーワード分析エラー: {error_msg}")
         import traceback
         traceback.print_exc()
@@ -297,7 +297,7 @@ async def integrated_analysis(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"関連キーワード分析中にHTTPエラーが発生しました: {error_msg}"
         )
-    except httpx.RequestError as e:
+    except requests.exceptions.RequestException as e:
         error_msg = f"リクエストエラー: {str(e)}"
         print(f"関連キーワード分析エラー: {error_msg}")
         import traceback
@@ -339,13 +339,13 @@ async def integrated_analysis(
                 "language_name": language_name
             }]
             
-            async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
-                difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
-                difficulty_response = await difficulty_client.post(
-                    difficulty_url, headers=headers, data=difficulty_payload_json
-                )
-                difficulty_response.raise_for_status()
-                difficulty_result = difficulty_response.json()
+            # DomainAnalyticsと同じくrequests.postを使用
+            difficulty_payload_json = json.dumps(difficulty_payload, ensure_ascii=False)
+            difficulty_response = requests.post(
+                difficulty_url, headers=headers, data=difficulty_payload_json, timeout=120
+            )
+            difficulty_response.raise_for_status()
+            difficulty_result = difficulty_response.json()
                 
                 if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
                     difficulty_task = difficulty_result["tasks"][0]
