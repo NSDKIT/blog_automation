@@ -157,6 +157,7 @@ export default function IntegratedAnalysis() {
     
     // Domain Analyticsから関連キーワードを抽出
     if (domainAnalytics?.results) {
+      console.log('[IntegratedAnalysis] Domain Analytics results count:', domainAnalytics.results.length)
       for (const result of domainAnalytics.results) {
         try {
           // response_jsonが存在しない場合は、response_textをパース
@@ -165,38 +166,76 @@ export default function IntegratedAnalysis() {
             try {
               responseJson = JSON.parse(result.response_text)
             } catch (parseError) {
-              console.warn('Failed to parse response_text:', parseError)
+              console.warn('[IntegratedAnalysis] Failed to parse response_text:', parseError)
               continue
             }
           }
           
           const tasks = responseJson?.tasks
           if (tasks && tasks.length > 0) {
-            const task = tasks[0]
-            // status_codeが20000（成功）の場合のみ処理
-            if (task.status_code === 20000 && task.result && task.result.length > 0) {
-              const taskResult = task.result[0]
-              // related_keywords APIの場合、items配列がある
-              if (taskResult.items && Array.isArray(taskResult.items)) {
-                for (const item of taskResult.items) {
-                  const difficulty = item.keyword_difficulty || 50
-                  relatedKeywords.push({
-                    keyword: item.keyword || '',
-                    search_volume: item.search_volume || 0,
-                    cpc: item.cpc || 0,
-                    competition: item.competition || 'low',
-                    competition_index: item.competition_index || 0,
-                    difficulty: difficulty,
-                    difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-                    priority_score: calculatePriorityScore(item),
-                    recommended_rank: estimateRecommendedRank(difficulty)
-                  })
+            console.log('[IntegratedAnalysis] Domain Analytics tasks count:', tasks.length)
+            for (const task of tasks) {
+              // status_codeが20000（成功）の場合のみ処理
+              if (task.status_code === 20000 && task.result) {
+                console.log('[IntegratedAnalysis] Domain Analytics task result structure:', {
+                  isArray: Array.isArray(task.result),
+                  length: task.result?.length || 0,
+                  firstItemKeys: task.result?.[0] ? Object.keys(task.result[0]) : [],
+                  hasItems: !!task.result?.[0]?.items,
+                  itemsCount: task.result?.[0]?.items?.length || 0
+                })
+                
+                // パターン1: task.result[0].items がある場合（related_keywords API）
+                if (task.result.length > 0 && task.result[0].items && Array.isArray(task.result[0].items)) {
+                  console.log('[IntegratedAnalysis] Using pattern 1: task.result[0].items, count:', task.result[0].items.length)
+                  for (const item of task.result[0].items) {
+                    if (item.keyword) {
+                      const difficulty = item.keyword_difficulty || 50
+                      relatedKeywords.push({
+                        keyword: item.keyword || '',
+                        search_volume: item.search_volume || 0,
+                        cpc: item.cpc || 0,
+                        competition: item.competition || 'low',
+                        competition_index: item.competition_index || 0,
+                        difficulty: difficulty,
+                        difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+                        priority_score: calculatePriorityScore(item),
+                        recommended_rank: estimateRecommendedRank(difficulty)
+                      })
+                    }
+                  }
                 }
+                // パターン2: task.result 自体がキーワードオブジェクトの配列の場合
+                else if (Array.isArray(task.result)) {
+                  console.log('[IntegratedAnalysis] Using pattern 2: task.result is keyword array, count:', task.result.length)
+                  for (const item of task.result) {
+                    // キーワードオブジェクトかどうかをチェック
+                    if (item.keyword && typeof item.keyword === 'string') {
+                      const difficulty = item.keyword_difficulty || 50
+                      // 重複チェック
+                      if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
+                        relatedKeywords.push({
+                          keyword: item.keyword || '',
+                          search_volume: item.search_volume || 0,
+                          cpc: item.cpc || 0,
+                          competition: item.competition || 'low',
+                          competition_index: item.competition_index || 0,
+                          difficulty: difficulty,
+                          difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+                          priority_score: calculatePriorityScore(item),
+                          recommended_rank: estimateRecommendedRank(difficulty)
+                        })
+                      }
+                    }
+                  }
+                }
+              } else {
+                console.warn('[IntegratedAnalysis] Domain Analytics task status_code is not 20000:', task.status_code, task.status_message)
               }
             }
           }
         } catch (error) {
-          console.warn('Domain Analytics result parsing error:', error, result)
+          console.warn('[IntegratedAnalysis] Domain Analytics result parsing error:', error, result)
         }
       }
     }
@@ -209,41 +248,81 @@ export default function IntegratedAnalysis() {
         try {
           responseJson = JSON.parse(dataforseoLabs.response_text)
         } catch (parseError) {
-          console.warn('Failed to parse DataForSEO Labs response_text:', parseError)
+          console.warn('[IntegratedAnalysis] Failed to parse DataForSEO Labs response_text:', parseError)
         }
       }
       
       const tasks = responseJson?.tasks
       if (tasks && tasks.length > 0) {
-        const task = tasks[0]
-        // status_codeが20000（成功）の場合のみ処理
-        if (task.status_code === 20000 && task.result && task.result.length > 0) {
-          const taskResult = task.result[0]
-          // related_keywords APIの場合、items配列がある
-          if (taskResult.items && Array.isArray(taskResult.items)) {
-            for (const item of taskResult.items) {
-              // 重複チェック
-              if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
-                const difficulty = item.keyword_difficulty || 50
-                relatedKeywords.push({
-                  keyword: item.keyword || '',
-                  search_volume: item.search_volume || 0,
-                  cpc: item.cpc || 0,
-                  competition: item.competition || 'low',
-                  competition_index: item.competition_index || 0,
-                  difficulty: difficulty,
-                  difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-                  priority_score: calculatePriorityScore(item),
-                  recommended_rank: estimateRecommendedRank(difficulty)
-                })
+        console.log('[IntegratedAnalysis] DataForSEO Labs tasks count:', tasks.length)
+        for (const task of tasks) {
+          // status_codeが20000（成功）の場合のみ処理
+          if (task.status_code === 20000 && task.result) {
+            console.log('[IntegratedAnalysis] DataForSEO Labs task result structure:', {
+              isArray: Array.isArray(task.result),
+              length: task.result?.length || 0,
+              firstItemKeys: task.result?.[0] ? Object.keys(task.result[0]) : [],
+              hasItems: !!task.result?.[0]?.items,
+              itemsCount: task.result?.[0]?.items?.length || 0
+            })
+            
+            // パターン1: task.result[0].items がある場合（related_keywords API）
+            if (task.result.length > 0 && task.result[0].items && Array.isArray(task.result[0].items)) {
+              console.log('[IntegratedAnalysis] Using pattern 1: task.result[0].items, count:', task.result[0].items.length)
+              for (const item of task.result[0].items) {
+                if (item.keyword) {
+                  // 重複チェック
+                  if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
+                    const difficulty = item.keyword_difficulty || 50
+                    relatedKeywords.push({
+                      keyword: item.keyword || '',
+                      search_volume: item.search_volume || 0,
+                      cpc: item.cpc || 0,
+                      competition: item.competition || 'low',
+                      competition_index: item.competition_index || 0,
+                      difficulty: difficulty,
+                      difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+                      priority_score: calculatePriorityScore(item),
+                      recommended_rank: estimateRecommendedRank(difficulty)
+                    })
+                  }
+                }
               }
             }
+            // パターン2: task.result 自体がキーワードオブジェクトの配列の場合
+            else if (Array.isArray(task.result)) {
+              console.log('[IntegratedAnalysis] Using pattern 2: task.result is keyword array, count:', task.result.length)
+              for (const item of task.result) {
+                // キーワードオブジェクトかどうかをチェック
+                if (item.keyword && typeof item.keyword === 'string') {
+                  // 重複チェック
+                  if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
+                    const difficulty = item.keyword_difficulty || 50
+                    relatedKeywords.push({
+                      keyword: item.keyword || '',
+                      search_volume: item.search_volume || 0,
+                      cpc: item.cpc || 0,
+                      competition: item.competition || 'low',
+                      competition_index: item.competition_index || 0,
+                      difficulty: difficulty,
+                      difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+                      priority_score: calculatePriorityScore(item),
+                      recommended_rank: estimateRecommendedRank(difficulty)
+                    })
+                  }
+                }
+              }
+            }
+          } else {
+            console.warn('[IntegratedAnalysis] DataForSEO Labs task status_code is not 20000:', task.status_code, task.status_message)
           }
         }
       }
     } catch (error) {
-      console.warn('DataForSEO Labs result parsing error:', error, dataforseoLabs)
+      console.warn('[IntegratedAnalysis] DataForSEO Labs result parsing error:', error, dataforseoLabs)
     }
+    
+    console.log('[IntegratedAnalysis] Total related keywords extracted:', relatedKeywords.length)
     
     // 優先度スコアでソート
     relatedKeywords.sort((a, b) => b.priority_score - a.priority_score)
@@ -527,22 +606,39 @@ export default function IntegratedAnalysis() {
                   <pre className="whitespace-pre-wrap">
                     {JSON.stringify({
                       resultsCount: rawApiData.domainAnalytics?.results?.length || 0,
-                      firstResult: rawApiData.domainAnalytics?.results?.[0] ? {
-                        hasResponseJson: !!rawApiData.domainAnalytics.results[0].response_json,
-                        hasResponseText: !!rawApiData.domainAnalytics.results[0].response_text,
-                        responseJsonKeys: rawApiData.domainAnalytics.results[0].response_json ? Object.keys(rawApiData.domainAnalytics.results[0].response_json) : [],
-                        tasks: rawApiData.domainAnalytics.results[0].response_json?.tasks ? {
-                          count: rawApiData.domainAnalytics.results[0].response_json.tasks.length,
-                          firstTask: {
-                            statusCode: rawApiData.domainAnalytics.results[0].response_json.tasks[0].status_code,
-                            hasResult: !!rawApiData.domainAnalytics.results[0].response_json.tasks[0].result,
-                            resultCount: rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.length || 0,
-                            firstResultKeys: rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.[0] ? Object.keys(rawApiData.domainAnalytics.results[0].response_json.tasks[0].result[0]) : [],
-                            hasItems: !!rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.[0]?.items,
-                            itemsCount: rawApiData.domainAnalytics.results[0].response_json.tasks[0].result?.[0]?.items?.length || 0
-                          }
-                        } : null
-                      } : null
+                      results: rawApiData.domainAnalytics?.results?.map((result: any, idx: number) => {
+                        const responseJson = result.response_json || (result.response_text ? JSON.parse(result.response_text) : null)
+                        const tasks = responseJson?.tasks || []
+                        return {
+                          index: idx,
+                          url: result.url,
+                          hasResponseJson: !!result.response_json,
+                          hasResponseText: !!result.response_text,
+                          tasksCount: tasks.length,
+                          tasks: tasks.map((task: any, taskIdx: number) => ({
+                            index: taskIdx,
+                            statusCode: task.status_code,
+                            statusMessage: task.status_message,
+                            hasResult: !!task.result,
+                            resultIsArray: Array.isArray(task.result),
+                            resultLength: task.result?.length || 0,
+                            resultStructure: task.result && task.result.length > 0 ? {
+                              firstItemKeys: Object.keys(task.result[0] || {}),
+                              hasItems: !!task.result[0]?.items,
+                              itemsCount: task.result[0]?.items?.length || 0,
+                              firstItemSample: task.result[0]?.items?.[0] ? {
+                                keyword: task.result[0].items[0].keyword,
+                                hasKeyword: !!task.result[0].items[0].keyword
+                              } : null,
+                              // result[0]自体がキーワードオブジェクトの場合
+                              isKeywordObject: task.result[0]?.keyword ? {
+                                keyword: task.result[0].keyword,
+                                hasSearchVolume: !!task.result[0].search_volume
+                              } : null
+                            } : null
+                          }))
+                        }
+                      }) || []
                     }, null, 2)}
                   </pre>
                 </div>
@@ -555,18 +651,29 @@ export default function IntegratedAnalysis() {
                     {JSON.stringify({
                       hasResponseJson: !!rawApiData.dataforseoLabs?.response_json,
                       hasResponseText: !!rawApiData.dataforseoLabs?.response_text,
-                      responseJsonKeys: rawApiData.dataforseoLabs?.response_json ? Object.keys(rawApiData.dataforseoLabs.response_json) : [],
-                      tasks: rawApiData.dataforseoLabs?.response_json?.tasks ? {
-                        count: rawApiData.dataforseoLabs.response_json.tasks.length,
-                        firstTask: {
-                          statusCode: rawApiData.dataforseoLabs.response_json.tasks[0].status_code,
-                          hasResult: !!rawApiData.dataforseoLabs.response_json.tasks[0].result,
-                          resultCount: rawApiData.dataforseoLabs.response_json.tasks[0].result?.length || 0,
-                          firstResultKeys: rawApiData.dataforseoLabs.response_json.tasks[0].result?.[0] ? Object.keys(rawApiData.dataforseoLabs.response_json.tasks[0].result[0]) : [],
-                          hasItems: !!rawApiData.dataforseoLabs.response_json.tasks[0].result?.[0]?.items,
-                          itemsCount: rawApiData.dataforseoLabs.response_json.tasks[0].result?.[0]?.items?.length || 0
-                        }
-                      } : null
+                      url: rawApiData.dataforseoLabs?.url,
+                      tasks: rawApiData.dataforseoLabs?.response_json?.tasks ? rawApiData.dataforseoLabs.response_json.tasks.map((task: any, taskIdx: number) => ({
+                        index: taskIdx,
+                        statusCode: task.status_code,
+                        statusMessage: task.status_message,
+                        hasResult: !!task.result,
+                        resultIsArray: Array.isArray(task.result),
+                        resultLength: task.result?.length || 0,
+                        resultStructure: task.result && task.result.length > 0 ? {
+                          firstItemKeys: Object.keys(task.result[0] || {}),
+                          hasItems: !!task.result[0]?.items,
+                          itemsCount: task.result[0]?.items?.length || 0,
+                          firstItemSample: task.result[0]?.items?.[0] ? {
+                            keyword: task.result[0].items[0].keyword,
+                            hasKeyword: !!task.result[0].items[0].keyword
+                          } : null,
+                          // result[0]自体がキーワードオブジェクトの場合
+                          isKeywordObject: task.result[0]?.keyword ? {
+                            keyword: task.result[0].keyword,
+                            hasSearchVolume: !!task.result[0].search_volume
+                          } : null
+                        } : null
+                      })) : null
                     }, null, 2)}
                   </pre>
                 </div>
