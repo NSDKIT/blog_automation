@@ -23,7 +23,7 @@ export default function IntegratedAnalysis() {
     mutationFn: async () => {
       // 各タブの既存エンドポイントを順次呼び出し（サーバー負荷を軽減）
       // リトライロジック付きのヘルパー関数
-      const retryRequest = async <T>(
+      const retryRequest = async <T,>(
         requestFn: () => Promise<T>,
         maxRetries: number = 3,
         delay: number = 2000
