@@ -209,9 +209,9 @@ async def integrated_analysis(
                         )
                         difficulty_response.raise_for_status()
                         difficulty_result = difficulty_response.json()
-                            
-                            difficulty_map = {}
-                            if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
+                        
+                        difficulty_map = {}
+                        if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
                                 difficulty_task = difficulty_result["tasks"][0]
                                 difficulty_status_code = difficulty_task.get("status_code")
                                 if difficulty_status_code == 20000:
@@ -239,9 +239,9 @@ async def integrated_analysis(
                     )
                     sv_response.raise_for_status()
                     sv_result = sv_response.json()
-                        
-                        sv_map = {}
-                        if sv_result.get("tasks") and len(sv_result["tasks"]) > 0:
+                    
+                    sv_map = {}
+                    if sv_result.get("tasks") and len(sv_result["tasks"]) > 0:
                             sv_task = sv_result["tasks"][0]
                             sv_status_code = sv_task.get("status_code")
                             if sv_status_code == 20000:
@@ -346,8 +346,8 @@ async def integrated_analysis(
             )
             difficulty_response.raise_for_status()
             difficulty_result = difficulty_response.json()
-                
-                if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
+            
+            if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
                     difficulty_task = difficulty_result["tasks"][0]
                     if difficulty_task.get("status_code") == 20000:
                         difficulty_items = difficulty_task.get("result", [])
