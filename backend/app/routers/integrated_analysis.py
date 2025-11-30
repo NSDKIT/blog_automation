@@ -121,7 +121,7 @@ async def integrated_analysis(
         payload_json = json.dumps(payload, ensure_ascii=False)
         
         async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, content=payload_json)
+            response = await client.post(url, headers=headers, data=payload_json)
             response.raise_for_status()
             result = response.json()
             
@@ -162,7 +162,7 @@ async def integrated_analysis(
         payload_json = json.dumps(payload, ensure_ascii=False)
         
         async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, content=payload_json)
+            response = await client.post(url, headers=headers, data=payload_json)
             response.raise_for_status()
             result = response.json()
             
