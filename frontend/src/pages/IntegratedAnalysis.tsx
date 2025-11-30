@@ -18,8 +18,6 @@ export default function IntegratedAnalysis() {
   const [volumeFilter, setVolumeFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
-  const [showDebugInfo, setShowDebugInfo] = useState(false)
-  const [rawApiData, setRawApiData] = useState<any>(null)
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -86,22 +84,6 @@ export default function IntegratedAnalysis() {
       } catch (error) {
         console.warn('SERP Analysis failed, continuing without it:', error)
       }
-      
-      // デバッグ用に生データを保存
-      setRawApiData({
-        keywordData: keywordDataResult,
-        serp: serpResult,
-        domainAnalytics: domainAnalyticsResult,
-        dataforseoLabs: dataforseoLabsResult
-      })
-      
-      // デバッグ用に生データを保存
-      setRawApiData({
-        keywordData: keywordDataResult,
-        serp: serpResult,
-        domainAnalytics: domainAnalyticsResult,
-        dataforseoLabs: dataforseoLabsResult
-      })
       
       // 結果を統合分析の形式に変換
       return transformToIntegratedResult(keywordDataResult, serpResult, domainAnalyticsResult, dataforseoLabsResult)
@@ -628,170 +610,6 @@ export default function IntegratedAnalysis() {
                 null, 
                 2
               )}</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* デバッグ情報表示 */}
-      {mutation.data && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-yellow-800 font-semibold">
-              🔍 デバッグ情報
-            </p>
-            <button
-              onClick={() => setShowDebugInfo(!showDebugInfo)}
-              className="px-3 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 rounded text-sm"
-            >
-              {showDebugInfo ? '非表示' : '表示'}
-            </button>
-          </div>
-          {showDebugInfo && rawApiData && (
-            <div className="space-y-4 mt-4">
-              <div className="bg-white border-2 border-yellow-400 rounded-lg p-4">
-                <p className="text-lg font-bold text-yellow-900 mb-2">
-                  📊 取得結果サマリー
-                </p>
-                <div className="space-y-2">
-                  <p className="text-base font-semibold text-gray-800">
-                    総取得件数: <span className="text-indigo-600 text-xl">{mutation.data.related_keywords?.length || 0}件</span>
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    • Domain Analytics: {(() => {
-                      let count = 0
-                      if (rawApiData.domainAnalytics?.results) {
-                        for (const result of rawApiData.domainAnalytics.results) {
-                          try {
-                            const responseJson = result.response_json || (result.response_text ? JSON.parse(result.response_text) : null)
-                            const tasks = responseJson?.tasks || []
-                            for (const task of tasks) {
-                              if (task.status_code === 20000 && task.result) {
-                                if (task.result.length > 0 && task.result[0].items && Array.isArray(task.result[0].items)) {
-                                  count += task.result[0].items.length
-                                } else if (Array.isArray(task.result)) {
-                                  count += task.result.filter((item: any) => item.keyword).length
-                                }
-                              }
-                            }
-                          } catch (e) {}
-                        }
-                      }
-                      return count
-                    })()}件
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    • DataForSEO Labs: {(() => {
-                      let count = 0
-                      try {
-                        const responseJson = rawApiData.dataforseoLabs?.response_json || (rawApiData.dataforseoLabs?.response_text ? JSON.parse(rawApiData.dataforseoLabs.response_text) : null)
-                        const tasks = responseJson?.tasks || []
-                        for (const task of tasks) {
-                          if (task.status_code === 20000 && task.result) {
-                            if (task.result.length > 0 && task.result[0].items && Array.isArray(task.result[0].items)) {
-                              count += task.result[0].items.length
-                            } else if (Array.isArray(task.result)) {
-                              count += task.result.filter((item: any) => item.keyword).length
-                            }
-                          }
-                        }
-                      } catch (e) {}
-                      return count
-                    })()}件
-                  </p>
-                </div>
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium text-yellow-900 mb-2">Domain Analytics レスポンス構造:</p>
-                <div className="bg-white border border-yellow-300 rounded p-3 text-xs overflow-auto max-h-60">
-                  <pre className="whitespace-pre-wrap">
-                    {JSON.stringify({
-                      resultsCount: rawApiData.domainAnalytics?.results?.length || 0,
-                      results: rawApiData.domainAnalytics?.results?.map((result: any, idx: number) => {
-                        const responseJson = result.response_json || (result.response_text ? JSON.parse(result.response_text) : null)
-                        const tasks = responseJson?.tasks || []
-                        return {
-                          index: idx,
-                          url: result.url,
-                          hasResponseJson: !!result.response_json,
-                          hasResponseText: !!result.response_text,
-                          tasksCount: tasks.length,
-                          tasks: tasks.map((task: any, taskIdx: number) => ({
-                            index: taskIdx,
-                            statusCode: task.status_code,
-                            statusMessage: task.status_message,
-                            hasResult: !!task.result,
-                            resultIsArray: Array.isArray(task.result),
-                            resultLength: task.result?.length || 0,
-                            resultStructure: task.result && task.result.length > 0 ? {
-                              firstItemKeys: Object.keys(task.result[0] || {}),
-                              hasItems: !!task.result[0]?.items,
-                              itemsCount: task.result[0]?.items?.length || 0,
-                              firstItemSample: task.result[0]?.items?.[0] ? {
-                                keyword: task.result[0].items[0].keyword,
-                                hasKeyword: !!task.result[0].items[0].keyword
-                              } : null,
-                              // result[0]自体がキーワードオブジェクトの場合
-                              isKeywordObject: task.result[0]?.keyword ? {
-                                keyword: task.result[0].keyword,
-                                hasSearchVolume: !!task.result[0].search_volume
-                              } : null
-                            } : null
-                          }))
-                        }
-                      }) || []
-                    }, null, 2)}
-                  </pre>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-yellow-900 mb-2">DataForSEO Labs レスポンス構造:</p>
-                <div className="bg-white border border-yellow-300 rounded p-3 text-xs overflow-auto max-h-60">
-                  <pre className="whitespace-pre-wrap">
-                    {JSON.stringify({
-                      hasResponseJson: !!rawApiData.dataforseoLabs?.response_json,
-                      hasResponseText: !!rawApiData.dataforseoLabs?.response_text,
-                      url: rawApiData.dataforseoLabs?.url,
-                      tasks: rawApiData.dataforseoLabs?.response_json?.tasks ? rawApiData.dataforseoLabs.response_json.tasks.map((task: any, taskIdx: number) => ({
-                        index: taskIdx,
-                        statusCode: task.status_code,
-                        statusMessage: task.status_message,
-                        hasResult: !!task.result,
-                        resultIsArray: Array.isArray(task.result),
-                        resultLength: task.result?.length || 0,
-                        resultStructure: task.result && task.result.length > 0 ? {
-                          firstItemKeys: Object.keys(task.result[0] || {}),
-                          hasItems: !!task.result[0]?.items,
-                          itemsCount: task.result[0]?.items?.length || 0,
-                          firstItemSample: task.result[0]?.items?.[0] ? {
-                            keyword: task.result[0].items[0].keyword,
-                            hasKeyword: !!task.result[0].items[0].keyword
-                          } : null,
-                          // result[0]自体がキーワードオブジェクトの場合
-                          isKeywordObject: task.result[0]?.keyword ? {
-                            keyword: task.result[0].keyword,
-                            hasSearchVolume: !!task.result[0].search_volume
-                          } : null
-                        } : null
-                      })) : null
-                    }, null, 2)}
-                  </pre>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-yellow-900 mb-2">生データ（完全版）:</p>
-                <div className="bg-white border border-yellow-300 rounded p-3 text-xs overflow-auto max-h-96">
-                  <details>
-                    <summary className="cursor-pointer text-yellow-900 font-medium mb-2">クリックして展開</summary>
-                    <pre className="whitespace-pre-wrap mt-2">
-                      {JSON.stringify(rawApiData, null, 2)}
-                    </pre>
-                  </details>
-                </div>
-              </div>
             </div>
           )}
         </div>
