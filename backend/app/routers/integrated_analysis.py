@@ -80,7 +80,6 @@ def estimate_recommended_rank(keyword_difficulty: int) -> int:
 async def integrated_analysis(
     request: Request,
     keyword: str,
-    related_keywords_limit: int = 50,
     location_code: int = 2840,  # 日本
     language_code: str = "ja",
     current_user: dict = Depends(get_current_user)
@@ -155,7 +154,7 @@ async def integrated_analysis(
             "ignore_synonyms": False,
             "include_clickstream_data": False,
             "replace_with_core_keyword": False,
-            "limit": related_keywords_limit
+            "limit": 100  # DomainAnalyticsAPI.pyと同じ固定値
         }]
         
         # DomainAnalyticsAPI.pyと同じ形式で送信（json.dumpsを使用）
@@ -259,7 +258,7 @@ async def integrated_analysis(
                                 print(f"検索ボリューム取得エラー (status_code: {sv_status_code}): {sv_task.get('status_message', '')}")
                     
                     # データを統合
-                    for item in related_keywords_raw[:related_keywords_limit]:
+                    for item in related_keywords_raw[:100]:  # 最大100件
                         kw = item.get("keyword", "")
                         if not kw:
                             continue

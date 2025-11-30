@@ -55,13 +55,12 @@ export interface IntegratedAnalysisResult {
 
 export async function analyzeIntegrated(
   keyword: string,
-  relatedKeywordsLimit: number = 50,
   locationCode: number = 2840,
   languageCode: string = 'ja'
 ): Promise<IntegratedAnalysisResult> {
   try {
     const response = await apiClient.post<IntegratedAnalysisResult>(
-      `/integrated-analysis/analyze?keyword=${encodeURIComponent(keyword)}&related_keywords_limit=${relatedKeywordsLimit}&location_code=${locationCode}&language_code=${encodeURIComponent(languageCode)}`,
+      `/integrated-analysis/analyze?keyword=${encodeURIComponent(keyword)}&location_code=${locationCode}&language_code=${encodeURIComponent(languageCode)}`,
       {},
       {
         timeout: 180000, // 3分のタイムアウト（複数API呼び出しのため）

@@ -7,7 +7,6 @@ type SortType = 'priority' | 'volume' | 'difficulty_asc' | 'difficulty_desc' | '
 
 export default function IntegratedAnalysis() {
   const [keyword, setKeyword] = useState('')
-  const [relatedKeywordsLimit, setRelatedKeywordsLimit] = useState(50)
   const [locationCode, setLocationCode] = useState(2840) // 日本
   const [languageCode, setLanguageCode] = useState('ja')
   const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set())
@@ -18,7 +17,7 @@ export default function IntegratedAnalysis() {
   const itemsPerPage = 20
 
   const mutation = useMutation({
-    mutationFn: () => analyzeIntegrated(keyword, relatedKeywordsLimit, locationCode, languageCode),
+    mutationFn: () => analyzeIntegrated(keyword, locationCode, languageCode),
     onSuccess: () => {
       setSelectedKeywords(new Set())
       setCurrentPage(1)
