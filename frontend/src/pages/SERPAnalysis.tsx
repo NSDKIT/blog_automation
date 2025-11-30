@@ -364,7 +364,7 @@ export default function SERPAnalysis() {
             )}
 
             {/* Phase 4: 自動プロンプト生成 */}
-            {result.seo_analysis.prompt_generation && (
+            {result.seo_analysis?.prompt_generation && (
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">記事生成用プロンプト</h3>
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -374,8 +374,10 @@ export default function SERPAnalysis() {
                 </div>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(result.seo_analysis.prompt_generation.prompt)
-                    alert('プロンプトをクリップボードにコピーしました')
+                    if (result.seo_analysis?.prompt_generation?.prompt) {
+                      navigator.clipboard.writeText(result.seo_analysis.prompt_generation.prompt)
+                      alert('プロンプトをクリップボードにコピーしました')
+                    }
                   }}
                   className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                 >
