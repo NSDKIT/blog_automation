@@ -140,44 +140,70 @@ export default function IntegratedAnalysis() {
     // Domain Analyticsから関連キーワードを抽出
     if (domainAnalytics?.results) {
       for (const result of domainAnalytics.results) {
-        if (result.response_json?.tasks?.[0]?.result?.[0]?.items) {
-          for (const item of result.response_json.tasks[0].result[0].items) {
-            const difficulty = item.keyword_difficulty || 50
-            relatedKeywords.push({
-              keyword: item.keyword || '',
-              search_volume: item.search_volume || 0,
-              cpc: item.cpc || 0,
-              competition: item.competition || 'low',
-              competition_index: item.competition_index || 0,
-              difficulty: difficulty,
-              difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-              priority_score: calculatePriorityScore(item),
-              recommended_rank: estimateRecommendedRank(difficulty)
-            })
+        try {
+          const tasks = result.response_json?.tasks
+          if (tasks && tasks.length > 0) {
+            const task = tasks[0]
+            // status_codeが20000（成功）の場合のみ処理
+            if (task.status_code === 20000 && task.result && task.result.length > 0) {
+              const taskResult = task.result[0]
+              // related_keywords APIの場合、items配列がある
+              if (taskResult.items && Array.isArray(taskResult.items)) {
+                for (const item of taskResult.items) {
+                  const difficulty = item.keyword_difficulty || 50
+                  relatedKeywords.push({
+                    keyword: item.keyword || '',
+                    search_volume: item.search_volume || 0,
+                    cpc: item.cpc || 0,
+                    competition: item.competition || 'low',
+                    competition_index: item.competition_index || 0,
+                    difficulty: difficulty,
+                    difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+                    priority_score: calculatePriorityScore(item),
+                    recommended_rank: estimateRecommendedRank(difficulty)
+                  })
+                }
+              }
+            }
           }
+        } catch (error) {
+          console.warn('Domain Analytics result parsing error:', error, result)
         }
       }
     }
     
     // DataForSEO Labsから関連キーワードを抽出
-    if (dataforseoLabs?.response_json?.tasks?.[0]?.result?.[0]?.items) {
-      for (const item of dataforseoLabs.response_json.tasks[0].result[0].items) {
-        // 重複チェック
-        if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
-          const difficulty = item.keyword_difficulty || 50
-          relatedKeywords.push({
-            keyword: item.keyword || '',
-            search_volume: item.search_volume || 0,
-            cpc: item.cpc || 0,
-            competition: item.competition || 'low',
-            competition_index: item.competition_index || 0,
-            difficulty: difficulty,
-            difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
-            priority_score: calculatePriorityScore(item),
-            recommended_rank: estimateRecommendedRank(difficulty)
-          })
+    try {
+      const tasks = dataforseoLabs?.response_json?.tasks
+      if (tasks && tasks.length > 0) {
+        const task = tasks[0]
+        // status_codeが20000（成功）の場合のみ処理
+        if (task.status_code === 20000 && task.result && task.result.length > 0) {
+          const taskResult = task.result[0]
+          // related_keywords APIの場合、items配列がある
+          if (taskResult.items && Array.isArray(taskResult.items)) {
+            for (const item of taskResult.items) {
+              // 重複チェック
+              if (!relatedKeywords.find(rk => rk.keyword === item.keyword)) {
+                const difficulty = item.keyword_difficulty || 50
+                relatedKeywords.push({
+                  keyword: item.keyword || '',
+                  search_volume: item.search_volume || 0,
+                  cpc: item.cpc || 0,
+                  competition: item.competition || 'low',
+                  competition_index: item.competition_index || 0,
+                  difficulty: difficulty,
+                  difficulty_level: difficulty < 30 ? '即攻略' : difficulty < 70 ? '中期目標' : '長期目標',
+                  priority_score: calculatePriorityScore(item),
+                  recommended_rank: estimateRecommendedRank(difficulty)
+                })
+              }
+            }
+          }
         }
       }
+    } catch (error) {
+      console.warn('DataForSEO Labs result parsing error:', error, dataforseoLabs)
     }
     
     // 優先度スコアでソート
