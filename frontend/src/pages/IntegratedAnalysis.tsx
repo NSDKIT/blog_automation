@@ -94,6 +94,32 @@ export default function IntegratedAnalysis() {
     }
   })
   
+  // 優先度スコアを計算
+  const calculatePriorityScore = (item: any) => {
+    const volume = item.search_volume || 0
+    const difficulty = item.keyword_difficulty || 50
+    const cpc = item.cpc || 0
+    
+    // 検索ボリュームスコア（0-40点）
+    const volumeScore = Math.min(40, Math.log10(volume + 1) * 10)
+    
+    // 難易度スコア（0-30点、難易度が低いほど高得点）
+    const difficultyScore = (100 - difficulty) * 0.3
+    
+    // CPCスコア（0-30点）
+    const cpcScore = Math.min(30, cpc * 2)
+    
+    return volumeScore + difficultyScore + cpcScore
+  }
+  
+  // 推奨順位を推定
+  const estimateRecommendedRank = (difficulty: number) => {
+    if (difficulty < 30) return 1
+    if (difficulty < 50) return 5
+    if (difficulty < 70) return 10
+    return 20
+  }
+  
   // 各APIの結果を統合分析の形式に変換する関数
   const transformToIntegratedResult = (keywordData: any, _serp: any, domainAnalytics: any, dataforseoLabs: any) => {
     // メインキーワードデータを取得
@@ -193,32 +219,6 @@ export default function IntegratedAnalysis() {
       recommended_strategy: recommendedStrategy,
       total_count: relatedKeywords.length
     }
-  }
-  
-  // 優先度スコアを計算
-  const calculatePriorityScore = (item: any) => {
-    const volume = item.search_volume || 0
-    const difficulty = item.keyword_difficulty || 50
-    const cpc = item.cpc || 0
-    
-    // 検索ボリュームスコア（0-40点）
-    const volumeScore = Math.min(40, Math.log10(volume + 1) * 10)
-    
-    // 難易度スコア（0-30点、難易度が低いほど高得点）
-    const difficultyScore = (100 - difficulty) * 0.3
-    
-    // CPCスコア（0-30点）
-    const cpcScore = Math.min(30, cpc * 2)
-    
-    return volumeScore + difficultyScore + cpcScore
-  }
-  
-  // 推奨順位を推定
-  const estimateRecommendedRank = (difficulty: number) => {
-    if (difficulty < 30) return 1
-    if (difficulty < 50) return 5
-    if (difficulty < 70) return 10
-    return 20
   }
 
   // フィルター適用
