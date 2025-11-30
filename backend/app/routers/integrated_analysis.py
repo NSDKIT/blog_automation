@@ -184,90 +184,94 @@ async def integrated_analysis(
                     
                     # bulk_keyword_difficulty APIで難易度を一括取得
                     if related_keywords_list:
-                            difficulty_url = f"{BASE_URL}/bulk_keyword_difficulty/live"
+                        difficulty_url = f"{BASE_URL}/bulk_keyword_difficulty/live"
                             difficulty_payload = [{
                                 "keywords": related_keywords_list,
                                 "location_code": location_code,
                                 "language_code": language_code
                             }]
-                            
-                            async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
-                                difficulty_response = await difficulty_client.post(
-                                    difficulty_url, headers=headers, json=difficulty_payload
-                                )
-                                difficulty_response.raise_for_status()
-                                difficulty_result = difficulty_response.json()
-                                
-                                difficulty_map = {}
-                                if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
-                                    difficulty_task = difficulty_result["tasks"][0]
-                                    if difficulty_task.get("status_code") == 20000:
-                                        difficulty_items = difficulty_task.get("result", [])
-                                        if difficulty_items and len(difficulty_items) > 0:
-                                            for item in difficulty_items[0].get("items", []):
-                                                kw = item.get("keyword", "")
-                                                difficulty_map[kw] = item.get("keyword_difficulty", 50)
                         
-                        # 各関連キーワードの検索ボリュームとCPCを取得
-                        search_volume_url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
-                        search_volume_payload = [{
-                            "keywords": related_keywords_list,
-                            "location_code": location_code,
-                            "language_code": language_code
-                        }]
-                        
-                        async with httpx.AsyncClient(timeout=120.0) as sv_client:
-                            sv_response = await sv_client.post(
-                                search_volume_url, headers=headers, json=search_volume_payload
+                        async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
+                            difficulty_response = await difficulty_client.post(
+                                difficulty_url, headers=headers, json=difficulty_payload
                             )
-                            sv_response.raise_for_status()
-                            sv_result = sv_response.json()
+                            difficulty_response.raise_for_status()
+                            difficulty_result = difficulty_response.json()
                             
-                            sv_map = {}
-                            if sv_result.get("tasks") and len(sv_result["tasks"]) > 0:
-                                sv_task = sv_result["tasks"][0]
-                                sv_status_code = sv_task.get("status_code")
-                                if sv_status_code == 20000:
-                                    sv_items = sv_task.get("result", [])
-                                    for item in sv_items:
-                                        kw = item.get("keyword", "")
-                                        sv_map[kw] = {
-                                            "search_volume": item.get("search_volume", 0),
-                                            "cpc": item.get("cpc", 0),
-                                            "competition_index": item.get("competition_index", 50)
-                                        }
+                            difficulty_map = {}
+                            if difficulty_result.get("tasks") and len(difficulty_result["tasks"]) > 0:
+                                difficulty_task = difficulty_result["tasks"][0]
+                                difficulty_status_code = difficulty_task.get("status_code")
+                                if difficulty_status_code == 20000:
+                                    difficulty_items = difficulty_task.get("result", [])
+                                    if difficulty_items and len(difficulty_items) > 0:
+                                        for item in difficulty_items[0].get("items", []):
+                                            kw = item.get("keyword", "")
+                                            difficulty_map[kw] = item.get("keyword_difficulty", 50)
                                 else:
-                                    # 検索ボリューム取得のエラーは致命的ではないので、デフォルト値を使用
-                                    print(f"検索ボリューム取得エラー (status_code: {sv_status_code}): {sv_task.get('status_message', '')}")
+                                    # 難易度取得のエラーは致命的ではないので、デフォルト値を使用
+                                    print(f"難易度取得エラー (status_code: {difficulty_status_code}): {difficulty_task.get('status_message', '')}")
+                    
+                    # 各関連キーワードの検索ボリュームとCPCを取得
+                    search_volume_url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
+                    search_volume_payload = [{
+                        "keywords": related_keywords_list,
+                        "location_code": location_code,
+                        "language_code": language_code
+                    }]
+                    
+                    async with httpx.AsyncClient(timeout=120.0) as sv_client:
+                        sv_response = await sv_client.post(
+                            search_volume_url, headers=headers, json=search_volume_payload
+                        )
+                        sv_response.raise_for_status()
+                        sv_result = sv_response.json()
                         
-                        # データを統合
-                        for item in related_keywords_raw[:related_keywords_limit]:
-                            kw = item.get("keyword", "")
-                            if not kw:
-                                continue
-                            
-                            sv_data = sv_map.get(kw, {})
-                            search_volume = sv_data.get("search_volume", 0)
-                            cpc = sv_data.get("cpc", 0)
-                            competition_index = sv_data.get("competition_index", 50)
-                            keyword_difficulty = difficulty_map.get(kw, 50)
-                            
-                            competition_level = get_competition_level(competition_index)
-                            difficulty_level = get_difficulty_level(keyword_difficulty)
-                            priority_score = calculate_priority_score(search_volume, cpc, keyword_difficulty)
-                            recommended_rank = estimate_recommended_rank(keyword_difficulty)
-                            
-                            related_keywords_data.append({
-                                "keyword": kw,
-                                "search_volume": search_volume,
-                                "cpc": round(cpc, 2),
-                                "competition": competition_level,
-                                "competition_index": competition_index,
-                                "difficulty": keyword_difficulty,
-                                "difficulty_level": difficulty_level,
-                                "priority_score": priority_score,
-                                "recommended_rank": recommended_rank
-                            })
+                        sv_map = {}
+                        if sv_result.get("tasks") and len(sv_result["tasks"]) > 0:
+                            sv_task = sv_result["tasks"][0]
+                            sv_status_code = sv_task.get("status_code")
+                            if sv_status_code == 20000:
+                                sv_items = sv_task.get("result", [])
+                                for item in sv_items:
+                                    kw = item.get("keyword", "")
+                                    sv_map[kw] = {
+                                        "search_volume": item.get("search_volume", 0),
+                                        "cpc": item.get("cpc", 0),
+                                        "competition_index": item.get("competition_index", 50)
+                                    }
+                            else:
+                                # 検索ボリューム取得のエラーは致命的ではないので、デフォルト値を使用
+                                print(f"検索ボリューム取得エラー (status_code: {sv_status_code}): {sv_task.get('status_message', '')}")
+                    
+                    # データを統合
+                    for item in related_keywords_raw[:related_keywords_limit]:
+                        kw = item.get("keyword", "")
+                        if not kw:
+                            continue
+                        
+                        sv_data = sv_map.get(kw, {})
+                        search_volume = sv_data.get("search_volume", 0)
+                        cpc = sv_data.get("cpc", 0)
+                        competition_index = sv_data.get("competition_index", 50)
+                        keyword_difficulty = difficulty_map.get(kw, 50)
+                        
+                        competition_level = get_competition_level(competition_index)
+                        difficulty_level = get_difficulty_level(keyword_difficulty)
+                        priority_score = calculate_priority_score(search_volume, cpc, keyword_difficulty)
+                        recommended_rank = estimate_recommended_rank(keyword_difficulty)
+                        
+                        related_keywords_data.append({
+                            "keyword": kw,
+                            "search_volume": search_volume,
+                            "cpc": round(cpc, 2),
+                            "competition": competition_level,
+                            "competition_index": competition_index,
+                            "difficulty": keyword_difficulty,
+                            "difficulty_level": difficulty_level,
+                            "priority_score": priority_score,
+                            "recommended_rank": recommended_rank
+                        })
     except HTTPException:
         # HTTPExceptionはそのまま再スロー
         raise
