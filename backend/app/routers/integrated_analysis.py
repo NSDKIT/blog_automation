@@ -188,7 +188,7 @@ async def integrated_analysis(
                     related_keywords_raw = task_result[0].get("items", [])
                     
                     # 各関連キーワードの詳細データを取得
-                    related_keywords_list = [item.get("keyword", "") for item in related_keywords_raw[:related_keywords_limit]]
+                    related_keywords_list = [item.get("keyword", "") for item in related_keywords_raw[:100]]  # 最大100件
                     
                     # bulk_keyword_difficulty APIで難易度を一括取得
                     if related_keywords_list:
