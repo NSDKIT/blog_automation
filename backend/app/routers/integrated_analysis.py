@@ -157,12 +157,27 @@ async def integrated_analysis(
             response.raise_for_status()
             result = response.json()
             
+            # DataForSEO APIのエラーステータスをチェック
             if result.get("tasks") and len(result["tasks"]) > 0:
                 task = result["tasks"][0]
-                if task.get("status_code") == 20000:
-                    task_result = task.get("result", [])
-                    if task_result and len(task_result) > 0:
-                        related_keywords_raw = task_result[0].get("items", [])
+                status_code = task.get("status_code")
+                status_message = task.get("status_message", "")
+                
+                if status_code != 20000:
+                    error_detail = f"DataForSEO API エラー (status_code: {status_code}): {status_message}"
+                    if status_code == 40200:
+                        error_detail = "DataForSEO APIへのアクセス権限がありません（Payment Required）。DataForSEOアカウントに残高があるか確認してください。"
+                    elif status_code == 40100:
+                        error_detail = "DataForSEO APIの認証に失敗しました。認証情報を確認してください。"
+                    
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=error_detail
+                    )
+                
+                task_result = task.get("result", [])
+                if task_result and len(task_result) > 0:
+                    related_keywords_raw = task_result[0].get("items", [])
                         
                         # 各関連キーワードの詳細データを取得
                         related_keywords_list = [item.get("keyword", "") for item in related_keywords_raw[:related_keywords_limit]]
@@ -211,7 +226,8 @@ async def integrated_analysis(
                             sv_map = {}
                             if sv_result.get("tasks") and len(sv_result["tasks"]) > 0:
                                 sv_task = sv_result["tasks"][0]
-                                if sv_task.get("status_code") == 20000:
+                                sv_status_code = sv_task.get("status_code")
+                                if sv_status_code == 20000:
                                     sv_items = sv_task.get("result", [])
                                     for item in sv_items:
                                         kw = item.get("keyword", "")
@@ -220,6 +236,9 @@ async def integrated_analysis(
                                             "cpc": item.get("cpc", 0),
                                             "competition_index": item.get("competition_index", 50)
                                         }
+                                else:
+                                    # 検索ボリューム取得のエラーは致命的ではないので、デフォルト値を使用
+                                    print(f"検索ボリューム取得エラー (status_code: {sv_status_code}): {sv_task.get('status_message', '')}")
                         
                         # データを統合
                         for item in related_keywords_raw[:related_keywords_limit]:
@@ -249,12 +268,32 @@ async def integrated_analysis(
                                 "priority_score": priority_score,
                                 "recommended_rank": recommended_rank
                             })
+    except HTTPException:
+        # HTTPExceptionはそのまま再スロー
+        raise
+    except httpx.HTTPStatusError as e:
+        error_msg = f"HTTPエラー: {e.response.status_code} - {e.response.text[:500]}"
+        print(f"関連キーワード分析エラー: {error_msg}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"関連キーワード分析中にHTTPエラーが発生しました: {error_msg}"
+        )
+    except httpx.RequestError as e:
+        error_msg = f"リクエストエラー: {str(e)}"
+        print(f"関連キーワード分析エラー: {error_msg}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"関連キーワード分析中にリクエストエラーが発生しました: {error_msg}"
+        )
     except Exception as e:
         error_msg = f"関連キーワード分析エラー: {str(e)}"
         print(error_msg)
         import traceback
         traceback.print_exc()
-        # エラーが発生しても空のリストを返すのではなく、エラーを伝播
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"関連キーワード分析中にエラーが発生しました: {str(e)}"
