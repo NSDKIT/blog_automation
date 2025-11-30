@@ -53,7 +53,7 @@ export default function IntegratedAnalysis() {
   })
   
   // 各APIの結果を統合分析の形式に変換する関数
-  const transformToIntegratedResult = (keywordData: any, serp: any, domainAnalytics: any, dataforseoLabs: any) => {
+  const transformToIntegratedResult = (keywordData: any, _serp: any, domainAnalytics: any, dataforseoLabs: any) => {
     // メインキーワードデータを取得
     const mainKeywordData = keywordData?.seo_analysis?.keyword_data
     const mainKeyword = mainKeywordData ? {
