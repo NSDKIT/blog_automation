@@ -117,8 +117,11 @@ async def integrated_analysis(
             "language_code": language_code
         }]
         
+        # DomainAnalyticsAPI.pyと同じ形式で送信（json.dumpsを使用）
+        payload_json = json.dumps(payload, ensure_ascii=False)
+        
         async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
+            response = await client.post(url, headers=headers, content=payload_json)
             response.raise_for_status()
             result = response.json()
             
@@ -231,8 +234,9 @@ async def integrated_analysis(
                     }]
                     
                     async with httpx.AsyncClient(timeout=120.0) as sv_client:
+                        sv_payload_json = json.dumps(search_volume_payload, ensure_ascii=False)
                         sv_response = await sv_client.post(
-                            search_volume_url, headers=headers, json=search_volume_payload
+                            search_volume_url, headers=headers, content=sv_payload_json
                         )
                         sv_response.raise_for_status()
                         sv_result = sv_response.json()
