@@ -8,6 +8,7 @@ import KeywordSelection from './pages/KeywordSelection'
 import KeywordAnalysis from './pages/KeywordAnalysis'
 import KeywordDataAnalysis from './pages/KeywordDataAnalysis'
 import SERPAnalysis from './pages/SERPAnalysis'
+import DomainAnalytics from './pages/DomainAnalytics'
 import Settings from './pages/Settings'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/Layout'
@@ -91,6 +92,16 @@ function App() {
               <PrivateRoute>
                 <Layout>
                   <SERPAnalysis />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/domain-analytics"
+            element={
+              <PrivateRoute>
+                <Layout>
+                  <DomainAnalytics />
                 </Layout>
               </PrivateRoute>
             }
