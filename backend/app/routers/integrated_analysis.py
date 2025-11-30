@@ -109,11 +109,11 @@ async def integrated_analysis(
     main_keyword_data = None
     try:
         # Google Ads Search Volume APIでメインキーワードのデータを取得
+        # KeywordDataAPI.pyと同じ形式（language_codeは使用しない）
         url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
         payload = [{
             "keywords": [keyword],
-            "location_code": location_code,
-            "language_code": language_code
+            "sort_by": "relevance"
         }]
         
         # DomainAnalyticsAPI.pyと同じ形式で送信（json.dumpsを使用）
@@ -221,11 +221,11 @@ async def integrated_analysis(
                                     print(f"難易度取得エラー (status_code: {difficulty_status_code}): {difficulty_task.get('status_message', '')}")
                     
                     # 各関連キーワードの検索ボリュームとCPCを取得
+                    # KeywordDataAPI.pyと同じ形式（language_codeは使用しない）
                     search_volume_url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
                     search_volume_payload = [{
                         "keywords": related_keywords_list,
-                        "location_code": location_code,
-                        "language_code": language_code
+                        "sort_by": "relevance"
                     }]
                     
                     # DomainAnalyticsと同じくrequests.postを使用
