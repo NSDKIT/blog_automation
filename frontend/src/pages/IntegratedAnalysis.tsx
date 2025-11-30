@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { analyzeIntegrated } from '../api/integrated_analysis'
+import apiClient from '../api/client'
+import { analyzeSERP } from '../api/serp'
+import { analyzeDomainAnalytics } from '../api/domain_analytics'
+import { analyzeDataForSEOLabs } from '../api/dataforseo_labs'
 
 type FilterType = 'all' | 'immediate' | 'medium' | 'long'
 type SortType = 'priority' | 'volume' | 'difficulty_asc' | 'difficulty_desc' | 'cpc' | 'rank'
