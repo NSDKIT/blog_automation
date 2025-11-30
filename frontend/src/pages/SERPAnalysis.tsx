@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { analyzeSERP } from '../api/serp'
-import { listIntegratedAnalyses, getIntegratedAnalysis, IntegratedAnalysisResult } from '../api/integrated_analysis_results'
+import { listIntegratedAnalyses, getIntegratedAnalysis } from '../api/integrated_analysis_results'
 
 export default function SERPAnalysis() {
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null)
