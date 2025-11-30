@@ -95,6 +95,14 @@ export default function IntegratedAnalysis() {
         dataforseoLabs: dataforseoLabsResult
       })
       
+      // デバッグ用に生データを保存
+      setRawApiData({
+        keywordData: keywordDataResult,
+        serp: serpResult,
+        domainAnalytics: domainAnalyticsResult,
+        dataforseoLabs: dataforseoLabsResult
+      })
+      
       // 結果を統合分析の形式に変換
       return transformToIntegratedResult(keywordDataResult, serpResult, domainAnalyticsResult, dataforseoLabsResult)
     },
