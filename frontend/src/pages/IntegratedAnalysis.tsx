@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { analyzeIntegrated, IntegratedAnalysisResult, RelatedKeyword } from '../api/integrated_analysis'
+import { analyzeIntegrated } from '../api/integrated_analysis'
 
 type FilterType = 'all' | 'immediate' | 'medium' | 'long'
 type SortType = 'priority' | 'volume' | 'difficulty_asc' | 'difficulty_desc' | 'cpc' | 'rank'
@@ -454,7 +454,7 @@ export default function IntegratedAnalysis() {
                   🟢マーク全選択
                 </button>
                 <button
-                  onClick={handleSelectAll}
+                  onClick={() => handleSelectAll()}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium"
                 >
                   カスタム選択
