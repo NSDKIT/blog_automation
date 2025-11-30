@@ -139,10 +139,13 @@ async def integrated_analysis(
     related_keywords_data = []
     try:
         url = f"{BASE_URL}/related_keywords/live"
+        # language_nameはlanguage_codeと同じ値に設定
+        language_name = language_code
         payload = [{
             "keyword": keyword,
             "location_code": location_code,
-            # language_codeはrelated_keywords APIではサポートされていないため削除
+            "language_code": language_code,
+            "language_name": language_name,
             "depth": 3,
             "include_seed_keyword": False,
             "include_serp_info": False,
@@ -317,10 +320,13 @@ async def integrated_analysis(
         main_difficulty = 50  # デフォルト値
         try:
             difficulty_url = f"{BASE_URL}/bulk_keyword_difficulty/live"
+            # language_nameはlanguage_codeと同じ値に設定
+            language_name = language_code
             difficulty_payload = [{
                 "keywords": [keyword],
                 "location_code": location_code,
-                "language_code": language_code
+                "language_code": language_code,
+                "language_name": language_name
             }]
             
             async with httpx.AsyncClient(timeout=120.0) as difficulty_client:
